@@ -1,0 +1,1005 @@
+<title>寶石鑑定室～西拉雅國家風景區官田遊客中心</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<style>
+/* 版面：觸控電視用的單一畫面；深綠工具列呼應展板的深綠帶，圖片直接取自館內展板。刻意採單一亮色主題。 */
+:root {
+  --paper: #eef1ef;
+  --card: #ffffff;
+  --ink: #1f2a2a;
+  --muted: #5a6664;
+  --band: #1f4a3e;
+  --red: #e8452c;
+  --blue: #2f5aa8;
+  --mango: #f4b223;
+  --ok: #2e8b57;
+  --line: #c5d0cd;
+  --display: "Huninn", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  --body: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 5px solid var(--mango); outline-offset: 4px; }
+#app { height: 100%; display: flex; flex-direction: column; }
+header { background: var(--card); color: var(--ink); border-bottom: 6px solid var(--band); display: flex; align-items: center; gap: clamp(8px, 1vw, 18px); padding-block: clamp(6px, 1vh, 14px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); flex-wrap: wrap; }
+header h1 { font-family: var(--display); font-weight: 400; font-size: clamp(20px, 2.2vw, 42px); margin: 0; letter-spacing: .04em; flex: 1; min-width: 0; }
+.tbtn { background: var(--card); border: 2px solid var(--line); border-radius: 999px; color: var(--ink); padding: .3em .9em; font-size: clamp(14px, 1.2vw, 24px); font-weight: 700; white-space: nowrap; }
+.tbtn[aria-pressed="true"] { background: var(--mango); color: var(--ink); border-color: var(--mango); }
+.stars { font-size: clamp(18px, 1.7vw, 32px); letter-spacing: .1em; color: #d99a00; white-space: nowrap; }
+.gem { width: 1.25em; height: 1em; display: inline-block; vertical-align: -.12em; flex: none; }
+.gem.off { filter: grayscale(1); opacity: .35; }
+header h1 { display: flex; align-items: center; gap: .35em; }
+header h1 .gem { width: 1.4em; height: 1.12em; }
+main { flex: 1; min-height: 0; position: relative; padding-block: clamp(10px, 1.8vh, 26px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; }
+.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: clamp(8px, 1.6vh, 22px); }
+.prompt { display: flex; align-items: center; gap: .45em; font-family: var(--display); font-size: clamp(22px, 3vw, 58px); line-height: 1.25; text-wrap: balance; }
+.prompt .say { flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; border: 0; background: var(--blue); color: #fff; font-size: .7em; display: grid; place-items: center; }
+.prompt .count { margin-left: auto; font-family: var(--body); font-size: .5em; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.next { background: var(--red); color: #fff; border: 0; border-radius: 999px; padding: .35em 1.3em; font-family: var(--display); font-size: clamp(20px, 2.3vw, 46px); box-shadow: 0 6px 0 rgba(0,0,0,.18); }
+.next.alt { background: var(--blue); }
+.next.ghost { background: var(--card); color: var(--ink); border: 3px solid var(--line); box-shadow: none; }
+.bar { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.tip { font-size: clamp(14px, 1.3vw, 24px); color: var(--muted); text-align: center; }
+
+/* 依剩下空間自動等比縮放：外框量空間，內容用 --r（寬/高）決定大小 */
+.fitbox { container-type: size; min-width: 0; min-height: 0; display: grid; place-items: center; }
+.fitted { width: min(100cqw, calc(100cqh * (var(--r)))); aspect-ratio: var(--r); }
+
+/* 首頁 */
+.home { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: clamp(12px, 1.8vw, 28px); align-content: center; }
+.gcard { background: var(--card); border: 0; border-radius: 24px; overflow: hidden; box-shadow: 0 6px 0 rgba(31,74,62,.18); display: flex; flex-direction: column; text-align: left; padding: 0; transition: transform .15s; }
+.gcard:active { transform: scale(.98); }
+.gcard .ph { aspect-ratio: 5 / 2; background: var(--paper) center / cover no-repeat; position: relative; }
+.gcard .lv { position: absolute; left: 12px; top: 12px; background: var(--band); color: #fff; border-radius: 999px; padding: .15em .7em; font-size: clamp(12px, 1vw, 20px); font-weight: 700; }
+.gcard .tx { padding: clamp(10px, 1.2vw, 22px); display: flex; flex-direction: column; gap: .2em; }
+.gcard .nm { font-family: var(--display); font-size: clamp(22px, 2.3vw, 46px); display: flex; justify-content: space-between; align-items: baseline; gap: .3em; }
+.gcard .st { display: inline-flex; }
+.gcard .ds { font-size: clamp(14px, 1.15vw, 22px); color: var(--muted); line-height: 1.45; }
+
+@media (min-width: 900px) { .home { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* 選項設定 */
+.setup { flex: 1; min-height: 0; width: 100%; max-width: 1600px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(16px, 3vw, 56px); align-items: center; }
+.setup .intro { display: flex; flex-direction: column; gap: .5em; min-width: 0; }
+.setup .intro .ph { width: 100%; aspect-ratio: 4 / 3; max-height: calc(100vh - 360px); background: var(--card) center / cover no-repeat; border-radius: 24px; box-shadow: 0 6px 0 rgba(31,74,62,.18); }
+.setup .intro h2 { font-family: var(--display); font-weight: 400; font-size: clamp(28px, 3.2vw, 64px); margin: .2em 0 0; line-height: 1.15; }
+.setup .intro p { margin: 0; font-size: clamp(16px, 1.5vw, 28px); color: var(--muted); line-height: 1.5; }
+.setup .panel { background: var(--card); border-radius: 24px; box-shadow: 0 6px 0 rgba(31,74,62,.12); padding: clamp(16px, 2.2vw, 40px); display: flex; flex-direction: column; gap: clamp(14px, 2.6vh, 34px); min-width: 0; }
+.setup .group { display: flex; flex-direction: column; gap: .5em; }
+.setup .lb { font-size: clamp(16px, 1.5vw, 28px); font-weight: 700; color: var(--muted); letter-spacing: .08em; }
+.setup .choices { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: clamp(8px, .9vw, 16px); }
+.setup .chip { white-space: pre-line; width: 100%; min-height: 2.6em; padding: .3em .5em; font-size: clamp(16px, 1.6vw, 30px); line-height: 1.25; text-align: center; border-width: 4px; }
+.setup .next { width: 100%; margin-top: .2em; }
+@media (max-width: 800px) { header h1 { flex-basis: 100%; } .setup { grid-template-columns: 1fr; } .setup .intro .ph { aspect-ratio: 16 / 7; } .setup .choices { --cols: 2 !important; } }
+.chip { background: var(--card); border: 4px solid var(--line); border-radius: 18px; padding: .35em 1em; font-size: clamp(18px, 1.8vw, 34px); font-weight: 700; }
+.chip[aria-pressed="true"] { border-color: var(--red); background: #fdeae6; }
+
+/* 路線配對 */
+.route { flex: 1; min-height: 0; display: grid; grid-template-rows: auto 1fr; gap: clamp(8px, 1.6vh, 20px); }
+.bins { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 1.4vw, 24px); }
+.bin { background: var(--card); border: 5px solid var(--line); border-radius: 22px; padding: 0; overflow: hidden; display: flex; flex-direction: column; text-align: left; }
+.bin .ph { height: clamp(70px, 17vh, 230px); background: center / cover no-repeat; }
+.bin .tx { padding: .3em .6em .5em; display: flex; flex-direction: column; gap: .2em; min-height: 0; }
+.bin .nm { font-family: var(--display); font-size: clamp(20px, 2.4vw, 48px); line-height: 1.1; }
+.bin .en { font-size: clamp(11px, .9vw, 18px); color: var(--muted); letter-spacing: .04em; }
+.bin .got { display: flex; flex-wrap: wrap; gap: 4px; }
+.bin .got img { width: clamp(34px, 4.4vw, 84px); aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; }
+.bin.over { border-color: var(--blue); }
+.bin.hint { border-color: var(--red); animation: pulseb 1s ease-in-out infinite; }
+@keyframes pulseb { 50% { background: #fde3dd; } }
+.deck { display: flex; align-items: center; justify-content: center; min-height: 0; }
+.item { background: var(--card); border-radius: 22px; box-shadow: 0 8px 0 rgba(31,74,62,.2); padding: clamp(8px, 1vw, 16px); display: flex; flex-direction: column; align-items: center; gap: .2em; touch-action: none; width: clamp(200px, 30vw, 520px); cursor: grab; }
+.item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; pointer-events: none; }
+.item .nm { font-family: var(--display); font-size: clamp(22px, 2.6vw, 52px); text-align: center; pointer-events: none; padding: .4em 0; }
+.item.textonly { padding: clamp(18px, 3vh, 40px) clamp(16px, 2vw, 32px); }
+.item.drag { position: fixed; z-index: 50; cursor: grabbing; box-shadow: 0 16px 30px rgba(0,0,0,.25); }
+.shake { animation: shake .4s; }
+@keyframes shake { 25% { transform: translateX(-12px); } 75% { transform: translateX(12px); } }
+
+/* 線索猜景點 */
+.clue { background: var(--card); border-left: 10px solid var(--mango); border-radius: 0 18px 18px 0; padding: .5em .9em; font-size: clamp(22px, 2.6vw, 52px); font-family: var(--display); line-height: 1.35; }
+.opts { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1.4vw, 24px); align-content: center; }
+.opt { background: var(--card); border: 5px solid transparent; border-radius: 20px; padding: clamp(6px, .7vw, 12px); display: flex; flex-direction: column; gap: .3em; box-shadow: 0 6px 0 rgba(31,74,62,.15); }
+.opt img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; }
+.opt .nm { font-size: clamp(16px, 1.7vw, 32px); font-weight: 700; text-align: center; }
+.opt.right { border-color: var(--ok); }
+.opt.dim { opacity: .3; }
+.opts[style*="--k"] { grid-template-columns: repeat(var(--k), minmax(0, 1fr)); }
+@media (orientation: portrait) { .opts[style*="--k"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.opt.hintb { border-color: var(--red); animation: pulseb 1s ease-in-out infinite; }
+.reveal { font-size: clamp(16px, 1.6vw, 30px); color: var(--band); font-weight: 700; text-align: center; min-height: 1.5em; }
+
+/* 建築師的祕密 */
+.pairs { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(12px, 3vw, 60px); position: relative; }
+.col { display: flex; flex-direction: column; gap: clamp(6px, 1vh, 14px); justify-content: center; min-height: 0; }
+.pc { background: var(--card); border: 4px solid var(--line); border-radius: 16px; padding: .45em .7em; font-size: clamp(15px, 1.55vw, 30px); line-height: 1.35; text-align: left; display: flex; gap: .5em; align-items: center; }
+.pc .tag { flex: none; width: 1.8em; height: 1.8em; border-radius: 50%; display: grid; place-items: center; background: var(--paper); font-weight: 900; font-size: .85em; }
+.pc.sel { border-color: var(--blue); background: #e6edf9; }
+.pc.done { border-color: var(--ok); background: #e5f3ea; }
+.pc.done .tag { background: var(--ok); color: #fff; }
+.pc.hint { border-color: var(--red); animation: pulseb 1s ease-in-out infinite; }
+
+.sq { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(12px, 2.4vw, 44px); align-items: stretch; }
+.sq .sqopts { align-self: center; }
+.sqfig { margin: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: .4em; min-height: 0; height: 100%; }
+.sqfig .ph { min-height: 0; }
+.sqfig .fitted { position: relative; }
+.sqfig img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sqfig img { border-radius: 18px; }
+.sqfig .kind { position: absolute; left: 12px; top: 12px; background: var(--band); color: #fff; border-radius: 999px; padding: .1em .7em; font-size: clamp(12px, 1vw, 20px); font-weight: 700; }
+.sqfig figcaption { font-family: var(--display); font-size: clamp(22px, 2.6vw, 52px); text-align: center; }
+.sqopts { display: flex; flex-direction: column; gap: clamp(8px, 1.6vh, 20px); }
+.sqopts .pc { font-size: clamp(18px, 2vw, 40px); padding: .6em .8em; }
+.pc.dimmed { opacity: .3; }
+.fact { background: #fff6dc; border-left: 8px solid var(--mango); border-radius: 0 14px 14px 0; padding: .5em .8em; font-size: clamp(16px, 1.6vw, 30px); line-height: 1.45; }
+.col { overflow: auto; justify-content: safe center; }
+.col.photos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: safe center; }
+.col.photos .pc { padding: .3em; flex-direction: column; align-items: stretch; gap: .2em; position: relative; font-size: clamp(13px, 1.25vw, 24px); text-align: center; }
+.col.photos .pc img { width: 100%; height: clamp(50px, 11vh, 150px); object-fit: cover; border-radius: 10px; }
+.col.photos .pc .tag { position: absolute; right: 8px; top: 8px; }
+.sq { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); }
+@media (max-width: 700px) { .sq { grid-template-columns: 1fr; } }
+/* 套色印章 */
+.stampwrap { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: clamp(14px, 3vw, 56px); align-items: stretch; }
+.stampwrap .stamps { align-self: center; }
+.pcard { position: relative; background: #fbfaf6; border-radius: 10px; box-shadow: 0 10px 28px rgba(31,42,42,.18), 0 0 0 1px var(--line); margin: 0 auto; }
+.pcard .layer { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .5s; mix-blend-mode: multiply; pointer-events: none; }
+.pcard .layer.on { opacity: 1; }
+.pcard .layer.seal { inset: auto 2% 2% auto; width: 27%; height: auto; transform: rotate(-8deg); }
+.pcard.thump { animation: thump .35s; }
+@keyframes thump { 30% { transform: scale(.97); } }
+.stamps { display: flex; flex-direction: column; gap: clamp(10px, 2vh, 24px); }
+.stampbtn { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center; gap: 4px 16px; background: var(--card); border: 4px solid var(--line); border-radius: 20px; padding: 10px 14px; text-align: left; }
+.stampbtn .handle { grid-row: span 2; width: clamp(80px, 8vw, 150px); aspect-ratio: 4 / 3; background: #e3262f; border-radius: 14px 14px 8px 8px; box-shadow: inset 0 -8px 0 rgba(0,0,0,.18); display: grid; place-items: center; transition: transform .15s; }
+.stampbtn .no { background: #fff; color: var(--ink); border-radius: 50%; width: 1.6em; height: 1.6em; display: grid; place-items: center; font-weight: 900; font-size: clamp(18px, 1.8vw, 34px); }
+.stampbtn .pad { height: clamp(56px, 10vh, 130px); background: #e9ecea; border-radius: 8px; display: flex; justify-content: center; overflow: hidden; }
+.stampbtn .pad img { height: 100%; width: auto; }
+.stampbtn .ink { font-size: clamp(16px, 1.6vw, 30px); font-weight: 900; }
+.stampbtn.press .handle { animation: press .35s; }
+@keyframes press { 40% { transform: translateY(14px) scale(.96); } }
+.stampbtn.used { opacity: .45; }
+.stampbtn.hint { border-color: var(--red); animation: pulseb 1s ease-in-out infinite; }
+@media (max-width: 700px) { .stampwrap { grid-template-columns: 1fr; } }
+/* 找一找（實景照片） */
+.stage { flex: 1; }
+.photo { position: relative; touch-action: none; }
+.photo img { display: block; width: 100%; height: 100%; border-radius: 16px; pointer-events: none; }
+.box { position: absolute; border: 5px dashed transparent; border-radius: 12px; }
+.edit .box { border-color: var(--mango); background: rgba(244,178,35,.18); }
+.edit .box span { position: absolute; left: 0; top: 0; transform: translateY(-110%); background: var(--mango); padding: 2px 10px; border-radius: 8px; font-weight: 700; font-size: clamp(13px, 1.1vw, 20px); white-space: nowrap; }
+.box.hint { border-color: var(--red); animation: pulseb 1s ease-in-out infinite; }
+.box.found { border: 6px solid var(--mango); box-shadow: 0 0 0 6px rgba(244,178,35,.4); }
+.box.drawing { border-color: var(--blue); }
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+.empty h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 3vw, 56px); margin: 0; }
+.empty ol { text-align: left; font-size: clamp(16px, 1.5vw, 28px); line-height: 1.7; margin: 0; max-width: 34em; }
+.tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
+.tools .chip { font-size: clamp(14px, 1.3vw, 24px); border-width: 3px; }
+.tools input[type=text] { font: inherit; font-size: clamp(14px, 1.3vw, 24px); padding: .3em .6em; border: 3px solid var(--line); border-radius: 14px; width: 9em; }
+.thumbs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.thumbs button { border: 4px solid transparent; border-radius: 10px; padding: 0; overflow: hidden; background: none; position: relative; }
+.thumbs button[aria-pressed="true"] { border-color: var(--red); }
+.thumbs img { height: 54px; display: block; }
+
+/* 回饋與證書 */
+.toast { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) scale(.6); opacity: 0; pointer-events: none; background: var(--ok); color: #fff; font-family: var(--display); font-size: clamp(32px, 5vw, 100px); padding: .2em .8em; border-radius: 999px; transition: .25s; z-index: 60; white-space: nowrap; }
+.toast.try { background: var(--blue); }
+.toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.cert { flex: 1; min-height: 0; background: var(--card); border: 12px double var(--red); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4em; text-align: center; padding: 16px; }
+.cert h2 { font-family: var(--display); font-weight: 400; font-size: clamp(36px, 5.5vw, 110px); margin: 0; color: var(--band); }
+.cert p { font-size: clamp(18px, 2vw, 40px); margin: 0; }
+.cert .big { font-size: clamp(36px, 4.5vw, 90px); color: var(--band); display: flex; align-items: center; gap: .2em; flex-wrap: wrap; justify-content: center; font-family: var(--display); }
+@media (max-width: 700px) { .opts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pairs { grid-template-columns: 1fr; } }
+@media (orientation: portrait) {
+  .sq, .stampwrap { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  .stamps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stampbtn .pad { height: clamp(40px, 6vh, 90px); }
+  .opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .opt img { aspect-ratio: 16 / 10; }
+  .setup { grid-template-columns: 1fr; align-content: center; }
+  .setup .intro { display: grid; grid-template-columns: 38% 1fr; gap: 0 16px; align-items: center; }
+  .setup .intro .ph { grid-row: span 2; aspect-ratio: 4 / 3; }
+  .home { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bins .bin .ph { height: clamp(60px, 10vh, 160px); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<div id="app">
+  <header>
+    <h1><svg class="gem" viewBox="0 0 100 80" aria-hidden="true"><use href="#gemShape"/></svg>寶石鑑定室～西拉雅國家風景區官田遊客中心</h1>
+    <span class="stars" id="stars" aria-label="寶石"></span>
+    <button class="tbtn" id="bHome">首頁</button>
+    <button class="tbtn" id="bEasy" aria-pressed="false">提示快一點</button>
+    <button class="tbtn" id="bSound" aria-pressed="true">聲音 開</button>
+    <button class="tbtn" id="bFull">全螢幕</button>
+  </header>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="gemShape" viewBox="0 0 100 80">
+    <polygon points="20,6 80,6 96,30 50,76 4,30" fill="#4fbfca"/>
+    <polygon points="20,6 35,30 4,30" fill="#9ed9d4"/>
+    <polygon points="50,6 65,30 35,30" fill="#9ed9d4"/>
+    <polygon points="80,6 96,30 65,30" fill="#9ed9d4"/>
+    <polygon points="35,30 65,30 50,76" fill="#9ed9d4"/>
+    <g fill="none" stroke="#1f2a2a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+      <polygon points="20,6 80,6 96,30 50,76 4,30"/>
+      <polyline points="4,30 96,30"/>
+      <polyline points="20,6 35,30 50,6 65,30 80,6"/>
+      <polyline points="35,30 50,76 65,30"/>
+    </g>
+    <rect x="12" y="34" width="20" height="7" rx="3.5" fill="#fff" transform="rotate(40 22 37)"/>
+    <circle cx="17" cy="23" r="3" fill="#fff"/>
+  </symbol>
+  <symbol id="gemLine" viewBox="0 0 100 80">
+    <g fill="none" stroke="#ffffff" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+      <polygon points="20,6 80,6 96,30 50,76 4,30"/>
+      <polyline points="4,30 96,30"/>
+      <polyline points="20,6 35,30 50,6 65,30 80,6"/>
+      <polyline points="35,30 50,76 65,30"/>
+    </g>
+  </symbol>
+</svg>
+
+<script>
+// ---------- 資料：三大主軸與 24 個景點（取自館內常設展展板） ----------
+const ROUTES = [
+  { k: "canal", nm: "水圳之源", en: "Source of water canal", sub: "官田・六甲・烏山頭・八田與一" },
+  { k: "hill", nm: "湖丘時光", en: "Hills & Lake in Time", sub: "南化・左鎮・玉井・新化・虎頭埤" },
+  { k: "cloud", nm: "雲水之間", en: "Between Clouds and Water", sub: "中埔・大埔・曾文水庫・楠西" },
+];
+const SPOTS = [
+  ["canal", 1, "官田遊客中心", "我們今天戶外教學來的地方，屋頂上長了草"],
+  ["canal", 2, "六甲落羽松森林", "一整排高高的樹倒映在水面上，秋冬葉子會變紅"],
+  ["canal", 3, "南元花園休閒農場", null],
+  ["canal", 4, "尖山埤江南渡假村", "湖邊的渡假村，可以坐船遊湖"],
+  ["canal", 5, "八田與一紀念園區", "紀念帶大家蓋烏山頭水庫和嘉南大圳的工程師"],
+  ["canal", 6, "烏山頭水庫", "湖面彎彎曲曲像珊瑚，所以又叫「珊瑚潭」"],
+  ["canal", 7, "山上花園水道博物館", "以前把水變乾淨、送給台南人喝的地方"],
+  ["canal", 8, "官田菱角田", "水田裡長著有角的果實，水雉鳥會來這裡"],
+  ["hill", 1, "南化遊客中心", null],
+  ["hill", 2, "大坑休閒農場", null],
+  ["hill", 3, "左鎮化石園區", "可以看到很久很久以前動物的骨頭化石"],
+  ["hill", 4, "玉井芒果冰", "夏天最受歡迎的冰，上面有黃色的水果"],
+  ["hill", 5, "新化老街", "一整排漂亮的老房子，牆上有雕花"],
+  ["hill", 6, "虎頭埤水庫", "台灣第一座水庫，湖上有長長的吊橋"],
+  ["hill", 7, "二寮觀日平臺", "天還沒亮就要來，看日出和雲海"],
+  ["hill", 8, "走馬瀨農場", "有大草原的農場，名字裡有一種動物"],
+  ["cloud", 1, "中埔遊客中心", null],
+  ["cloud", 2, "石硦林場", null],
+  ["cloud", 3, "大埔同心橋", "在大埔情人公園裡，跨過溪流的大橋"],
+  ["cloud", 4, "曾文水庫", "台灣最大的水庫"],
+  ["cloud", 5, "梅嶺風景區", "冬天山上會開滿白色梅花"],
+  ["cloud", 6, "玄空法寺", "寺廟門口有一塊寫著「佛」字的大石頭"],
+  ["cloud", 7, "鹿陶洋江家聚落", "同一個家族的人住在一起的古老三合院"],
+  ["cloud", 8, "龜丹溫泉", "可以泡溫泉、讓身體暖呼呼的地方"],
+].map(([r, n, nm, clue]) => ({ r, nm, clue, img: `img/${r}${n}.jpg` }));
+// 建築師的祕密：設計 ↔ 用意（依建築師設計概念導覽）
+const SECRETS = [
+  ["停車場屋頂上種滿植物（覆土建築）", "停車場藏在下面，上面變成綠地，比較涼", "img/s1.jpg", "官田遊客中心是覆土式綠建築，2022 年得到園冶獎"],
+  ["像飛鳥翅膀的折板大屋頂", "幫大家遮太陽，屋頂下空空的讓南風吹過", "img/s2.jpg", "大屋頂底下的「空」讓風到處流動，走在裡面很舒服"],
+  ["屋頂上的天窗", "陽光照進來，地上出現光影", "img/s3.jpg", "建築把台南的「陽光」帶進房子裡"],
+  ["入口圓弧形的房間", "像西拉雅人祭拜用的「壺」", "img/s4.jpg", "西拉雅人信仰阿立祖，用壺來祭拜"],
+  ["二樓水池流到一樓的瀑布", "像水庫的溢洪道，把阿立祖的「水」帶進來", "img/s5.jpg", "建築結合了水圳和景觀水池"],
+  ["房子圍著廣場、面向草地和水池", "像西拉雅聚落面向水、在戶外聚會", "img/s6.jpg", "園區融合台南的陽光、嘉南平原的風、阿立祖的水"],
+  ["白牆上的藍色線條、紅色窗框", "西拉雅傳統服飾的顏色", "img/s7.jpg", "西拉雅傳統服飾以藍、白、紅、黑為主"],
+  ["黃色的牆和白色的八葉花", "芒果黃、稻穗黃，加上西拉雅刺繡的花", "img/s8.jpg", "芒果黃、稻穗黃是這裡最有名的農產顏色"],
+  ["二樓的無邊際景觀水池", "水面像鏡子，映出天空和美麗的倒影", "img/s9.jpg", "站在二樓，可以拍到天空和雲朵的倒影"],
+  ["草原上的梅花鹿地景藝術", "以前嘉南平原上有成群的梅花鹿", "img/s10.jpg", "梅花鹿地景藝術呈現早期嘉南平原的樣子"],
+  ["草原小山坡上的白色許願鶴", "乘著祝福降臨西拉雅，作品名叫「幸福翔起」", "img/s12.jpg", "許願鶴由葛萊美獎設計大師蕭青陽設計"],
+  ["屋頂上的太陽能板", "用太陽發電，是省電的綠建築", "img/s11.jpg", "這裡以前是國軍的野戰訓練場，2020 年 8 月變成遊客中心"],
+].map(([a, b, img, fact]) => ({ a, b, img, fact, kind: "實景" }));
+// 實景找一找的內建題目（老師提供的照片，框選位置以百分比記錄；同一題可有多個框）
+const FIND_PRESETS = [
+  { id: "p25", src: "img/tabe7.jpg", boxes: [{ label: "Tabe! Tabe! 的鹿", x: 2.9, y: 37.5, w: 20.5, h: 30.8 }, { label: "Tabe! Tabe! 的野豬", x: 25.3, y: 55, w: 17.4, h: 14.2 }, { label: "Tabe! Tabe! 的犬", x: 45.8, y: 40.9, w: 18, h: 27.9 }, { label: "Tabe! Tabe! 的牛", x: 65.3, y: 54.7, w: 14.9, h: 13.3 }, { label: "Tabe! Tabe! 的蝸牛", x: 81.6, y: 50, w: 16.6, h: 16.4 }] },
+  { id: "p17", src: "img/find17.jpg", boxes: [{ label: "許願鶴", x: 27.2, y: 21, w: 53.6, h: 73.2 }, { label: "梅花鹿", x: 6.4, y: 66.1, w: 2, h: 7.6 }, { label: "梅花鹿", x: 12.4, y: 66.8, w: 1.8, h: 5.7 }, { label: "梅花鹿", x: 17, y: 69.3, w: 2.3, h: 7.1 }, { label: "梅花鹿", x: 19.3, y: 69.3, w: 1.5, h: 3.9 }, { label: "梅花鹿", x: 22.8, y: 67.1, w: 2.8, h: 10.3 }, { label: "梅花鹿", x: 34.2, y: 69.3, w: 3.3, h: 10.3 }, { label: "SIRAYA 大字", x: 30.8, y: 71, w: 10, h: 7.8 }, { label: "遊客中心建築", x: 58.5, y: 55.4, w: 41.5, h: 14.7 }] },
+  { id: "p10", src: "img/find10.jpg", boxes: [{ label: "入口的壺（圓弧形房間）", x: 57.3, y: 35.8, w: 14.6, h: 25 }, { label: "入口的壺（圓弧形房間）", x: 31.2, y: 36.9, w: 8, h: 17 }, { label: "入口的壺（圓弧形房間）", x: 48.6, y: 53.2, w: 16.7, h: 30.3 }, { label: "折板大屋頂", x: 18.4, y: 29.8, w: 42.7, h: 8.6 }, { label: "SIRAYA 大字", x: 45.5, y: 25.9, w: 8.7, h: 3.9 }, { label: "停車場上的草（覆土建築）", x: 11.1, y: 61.4, w: 36.8, h: 36.4 }] },
+  { id: "p13", src: "img/find13.jpg", boxes: [{ label: "水圳", x: 26.4, y: 66.1, w: 43.8, h: 33.9 }, { label: "太陽能板", x: 65.3, y: 8, w: 9.4, h: 10.3 }, { label: "折板大屋頂", x: 23.3, y: 15.9, w: 26.7, h: 22.2 }, { label: "SIRAYA 大字", x: 67.7, y: 47.8, w: 9, h: 6.8 }] },
+  { id: "p11", src: "img/find11.jpg", boxes: [{ label: "無邊際景觀水池", x: 32.7, y: 83.5, w: 67.3, h: 16.5 }, { label: "石頭窗框", x: 1.7, y: 5.7, w: 30.9, h: 92.6 }, { label: "牆上的八葉花", x: 74, y: 57.4, w: 5.9, h: 5.7 }, { label: "SIRAYA 大字", x: 12.5, y: 65.9, w: 11.8, h: 4 }] },
+  { id: "p12", src: "img/find12.jpg", boxes: [{ label: "黃色的窗框", x: 73, y: 33.2, w: 17, h: 44.6 }, { label: "紅色的窗框", x: 45.5, y: 60.1, w: 6.6, h: 14.3 }, { label: "藍色的線條", x: 84.1, y: 31.5, w: 4.2, h: 17.6 }] },
+  { id: "p7", src: "img/find7.jpg", boxes: [{ label: "折板大屋頂", x: 0, y: 25, w: 58.7, h: 23 }, { label: "屋頂的天窗", x: 28.1, y: 37.8, w: 10.2, h: 12.6 }, { label: "入口的壺（圓弧形房間）", x: 58.7, y: 21, w: 14.9, h: 21 }] },
+  { id: "p8", src: "img/find8.jpg", boxes: [{ label: "水池瀑布", x: 61.3, y: 25.5, w: 36.6, h: 42.4 }, { label: "牆上的八葉花", x: 81.3, y: 22.6, w: 9.8, h: 11.3 }] },
+  { id: "p9", src: "img/find9.jpg", boxes: [{ label: "折板大屋頂", x: 7.7, y: 27.5, w: 91.9, h: 20.3 }] },
+];
+const FIND_LABELS = ["入口的壺（圓弧形房間）", "折板大屋頂", "屋頂的天窗", "牆上的八葉花", "水池瀑布", "無邊際景觀水池", "停車場上的草（覆土建築）", "水圳", "SIRAYA 大字", "許願鶴", "梅花鹿", "遊客中心建築", "太陽能板", "黃色的窗框", "紅色的窗框", "藍色的線條"];
+
+const $ = (s, r = document) => r.querySelector(s);
+const main = $("#main");
+const state = { done: { route: false, clue: false, secret: false, find: false, tabe: false, stamp: false, plant: false }, easy: false, sound: true };
+const GAMES = {
+  route: { name: "三大主軸配對", lv: "分類", ds: "把展板上的 24 個景點，放進「水圳之源、湖丘時光、雲水之間」", ph: "img/hero-canal.jpg", run: routeSetup },
+  clue: { name: "聽線索猜景點", lv: "推理", ds: "聽一句線索，從 4 張展板圖片中找出是哪個景點、屬於哪條路線", ph: "img/hill4.jpg", run: clueSetup },
+  secret: { name: "建築師的祕密", lv: "因果配對", ds: "看遊客中心的照片：建築為什麼這樣蓋？找出設計的用意", ph: "img/s2.jpg", run: secretSetup },
+  tabe: { name: "Tabe! Tabe! 仙境西拉雅", lv: "公共藝術", ds: "草地上的五隻黑白動物：牠們是誰？代表西拉雅的什麼？", ph: "img/tabe7.jpg", run: tabeSetup },
+  stamp: { name: "套色印章明信片", lv: "蓋章", ds: "照順序蓋 1、2、3 號印章，三種顏色疊成一張明信片，最後蓋上官田遊客中心紀念章", ph: "img/stamp/erliao.jpg", run: stampSetup },
+  plant: { name: "湖丘之物：認識植物", lv: "植物", ds: "館內展示櫃的種子、果實和葉子：看特徵，認出 12 種常見植物", ph: "img/plants/orchidtree.svg", run: plantSetup },
+  find: { name: "實景找一找", lv: "實景照片", ds: "在遊客中心的照片上，點出大屋頂、天窗、瀑布等設計", ph: "img/s5.jpg", run: findHome },
+};
+
+// ---------- 聲音與回饋 ----------
+let actx;
+function chime(ok) {
+  if (!state.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    (ok ? [523, 659, 784] : [392, 330]).forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + i * 0.12;
+      o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.4);
+    });
+  } catch (e) {}
+}
+function speak(text) {
+  if (!state.sound) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/[「」（）]/g, " "));
+    u.lang = "zh-TW"; u.rate = 0.85;
+    const vs = speechSynthesis.getVoices();
+    const v = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+let toastT;
+function toast(text, ok = true, say = text) {
+  const t = $("#toast");
+  t.textContent = text; t.className = "toast show" + (ok ? "" : " try");
+  clearTimeout(toastT); toastT = setTimeout(() => t.className = "toast", 1200);
+  chime(ok); speak(say);
+}
+function promptEl(text, spoken, count) {
+  const d = document.createElement("div"); d.className = "prompt";
+  d.innerHTML = `<button class="say" aria-label="再聽一次">▶</button><span>${text}</span>${count ? `<span class="count">${count}</span>` : ""}`;
+  d.querySelector(".say").onclick = () => speak(spoken || text);
+  return d;
+}
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const hintAfter = () => state.easy ? 1 : 2;
+const routeOf = k => ROUTES.find(r => r.k === k);
+function fitPhoto(box) {
+  const img = box.querySelector("img"), set = () => img.naturalWidth && box.style.setProperty("--r", `${img.naturalWidth} / ${img.naturalHeight}`);
+  box.style.setProperty("--r", "4 / 3"); img.complete ? set() : img.addEventListener("load", set);
+}
+// 保險：版面仍放不下時，把整個畫面等比縮小，避免需要捲動才能按到答案
+let fitRaf;
+function fitScreen() {
+  cancelAnimationFrame(fitRaf);
+  fitRaf = requestAnimationFrame(() => {
+    const s = main.querySelector(".screen"); if (!s) return;
+    s.style.zoom = "";
+    const over = Math.max(s.scrollHeight / s.clientHeight, s.scrollWidth / s.clientWidth);
+    if (over > 1.01) s.style.zoom = Math.max(0.6, 1 / over).toFixed(3);
+  });
+}
+new MutationObserver(fitScreen).observe(main, { childList: true, subtree: true });
+addEventListener("resize", fitScreen);
+function screen() { main.innerHTML = ""; const s = el("div", "screen"); main.append(s); return s; }
+const gem = (on = true) => `<svg class="gem${on ? "" : " off"}" viewBox="0 0 100 80" aria-hidden="true"><use href="#gemShape"/></svg>`;
+function renderStars() { const v = Object.values(state.done), n = v.filter(Boolean).length; $("#stars").textContent = "★".repeat(n) + "☆".repeat(v.length - n); $("#stars").setAttribute("aria-label", `完成 ${n} / ${v.length}`); }
+
+function finish(key, summary) {
+  state.done[key] = true; renderStars(); save();
+  const s = screen();
+  const c = el("div", "cert", `<p>完成「${GAMES[key].name}」</p><div class="big">${gem()}鑑定成功，得到一顆寶石${gem()}</div><p>${summary}</p>`);
+  const bar = el("div", "bar");
+  const all = Object.values(state.done).every(Boolean);
+  const b1 = el("button", "next", all ? "看我的證書" : "回到首頁"); b1.onclick = all ? showCert : home;
+  const b2 = el("button", "next alt", "再玩一次"); b2.onclick = GAMES[key].run;
+  bar.append(b1, b2); c.append(bar); s.append(c);
+  speak(`完成${GAMES[key].name}，鑑定成功，得到一顆寶石`); chime(true);
+}
+
+// 選項設定畫面：rows = [{label, key, options:[[value,text]], value}]
+// 選項設定：左邊是遊戲圖片與說明，右邊是設定面板（每組選項標題在上、按鈕等寬排列）
+function setupScreen(title, say, rows, onStart) {
+  const s = screen();
+  s.append(promptEl("選擇玩法", say));
+  const g = Object.values(GAMES).find(x => x.name === title) || {};
+  const box = el("div", "setup");
+  box.append(el("div", "intro", `<div class="ph" style="background-image:url('${g.ph || ""}')"></div><h2>${title}</h2><p>${g.ds || ""}</p>`));
+  const panel = el("div", "panel");
+  const val = {};
+  rows.forEach(r => {
+    val[r.key] = r.value;
+    const grp = el("div", "group"); grp.append(el("span", "lb", r.label));
+    const ch = el("div", "choices"); ch.style.setProperty("--cols", Math.min(r.options.length, 4));
+    r.options.forEach(([v, t]) => {
+      const b = el("button", "chip", t); b.setAttribute("aria-pressed", v === r.value);
+      b.onclick = () => { val[r.key] = v; ch.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b)); };
+      ch.append(b);
+    });
+    grp.append(ch); panel.append(grp);
+  });
+  const go = el("button", "next", "開始"); go.onclick = () => onStart(val);
+  panel.append(go); box.append(panel); s.append(box);
+  speak(say);
+}
+
+// ---------- 首頁 ----------
+function home() {
+  const s = screen();
+  s.append(promptEl("選一個遊戲", "請選一個遊戲"));
+  const g = el("div", "home");
+  for (const [k, v] of Object.entries(GAMES)) {
+    const b = el("button", "gcard", `<div class="ph" style="background-image:url('${v.ph}')${v.ph.endsWith(".svg") ? ";background-size:contain;background-color:#f7f4ec" : ""}"><span class="lv">${v.lv}</span></div><div class="tx"><span class="nm">${v.name}<span class="st">${state.done[k] ? gem() : ""}</span></span><span class="ds">${v.ds}</span></div>`);
+    b.onclick = v.run; g.append(b);
+  }
+  s.append(g);
+  if (Object.values(state.done).every(Boolean)) { const bar = el("div", "bar"); const b = el("button", "next", "看我的證書"); b.onclick = showCert; bar.append(b); s.append(bar); }
+}
+
+// ---------- 遊戲一：三大主軸配對 ----------
+function routeSetup() {
+  setupScreen("三大主軸配對", "把景點放進對的路線。先選擇玩法", [
+    { label: "卡片上顯示", key: "mode", value: "pic", options: [["pic", "圖片＋名字"], ["name", "只有名字"]] },
+    { label: "卡片數量", key: "n", value: 12, options: [[6, "6 張"], [12, "12 張"], [24, "24 張"]] },
+  ], v => routeGame(v));
+}
+function routeGame({ mode, n }) {
+  const per = n / 3;
+  const qs = shuffle(ROUTES.flatMap(r => shuffle(SPOTS.filter(x => x.r === r.k)).slice(0, per)));
+  let i = 0, wrong = 0, lock = false, miss = 0, card;
+  const s = screen();
+  const p = el("div"); s.append(p);
+  const r = el("div", "route");
+  const bins = el("div", "bins");
+  ROUTES.forEach(rt => {
+    const b = el("button", "bin", `<div class="ph" style="background-image:url('img/hero-${rt.k}.jpg')"></div><div class="tx"><span class="nm">${rt.nm}</span><span class="en">${rt.en}</span><span class="got"></span></div>`);
+    b.dataset.k = rt.k; b.onclick = () => drop(b); bins.append(b);
+  });
+  const deck = el("div", "deck");
+  r.append(bins, deck); s.append(r, el("div", "tip", "把卡片拖到對的路線，或直接點路線"));
+  function ask() {
+    wrong = 0; lock = false;
+    bins.querySelectorAll(".bin").forEach(b => b.classList.remove("hint"));
+    const it = qs[i];
+    p.replaceChildren(promptEl(`「${it.nm}」屬於哪一條路線？`, `${it.nm}，屬於哪一條路線？`, `${i + 1} / ${qs.length}`));
+    card = el("div", "item" + (mode === "name" ? " textonly" : ""), (mode === "pic" ? `<img src="${it.img}" alt="">` : "") + `<span class="nm">${it.nm}</span>`);
+    deck.replaceChildren(card); makeDrag(card);
+    speak(`${it.nm}，屬於哪一條路線？`);
+  }
+  function drop(b) {
+    if (lock || !b) return;
+    const it = qs[i];
+    if (b.dataset.k === it.r) {
+      lock = true;
+      b.querySelector(".got").append(Object.assign(document.createElement("img"), { src: it.img, alt: it.nm }));
+      card.remove(); toast(`答對了！${routeOf(it.r).nm}`);
+      setTimeout(() => { i++; i < qs.length ? ask() : finish("route", `${qs.length} 個景點，答錯 ${miss} 次`); }, 1400);
+    } else {
+      wrong++; miss++; resetCard(); card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+      toast("再想想看", false);
+      if (wrong >= hintAfter()) bins.querySelector(`.bin[data-k="${it.r}"]`).classList.add("hint");
+    }
+  }
+  function resetCard() { card.classList.remove("drag"); card.style.left = card.style.top = card.style.width = ""; }
+  function binAt(x, y) { return [...bins.children].find(b => { const q = b.getBoundingClientRect(); return x >= q.left && x <= q.right && y >= q.top && y <= q.bottom; }); }
+  function makeDrag(c) {
+    c.addEventListener("pointerdown", e => {
+      if (lock) return;
+      const q = c.getBoundingClientRect(), ox = e.clientX - q.left, oy = e.clientY - q.top; let moved = false;
+      c.setPointerCapture(e.pointerId);
+      c.onpointermove = ev => {
+        if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 8) return;
+        if (!moved) { c.style.width = q.width + "px"; c.classList.add("drag"); }
+        moved = true; c.style.left = ev.clientX - ox + "px"; c.style.top = ev.clientY - oy + "px";
+        const u = binAt(ev.clientX, ev.clientY); [...bins.children].forEach(b => b.classList.toggle("over", b === u));
+      };
+      c.onpointerup = ev => {
+        c.onpointermove = c.onpointerup = null; [...bins.children].forEach(b => b.classList.remove("over"));
+        if (!moved) return;
+        const u = binAt(ev.clientX, ev.clientY); u ? drop(u) : resetCard();
+      };
+    });
+  }
+  ask();
+}
+
+// ---------- 遊戲二：聽線索猜景點 ----------
+function clueSetup() {
+  setupScreen("聽線索猜景點", "聽線索，找出是哪個景點。先選擇玩法", [
+    { label: "答案卡顯示", key: "names", value: true, options: [[true, "圖片＋名字"], [false, "只有圖片"]] },
+    { label: "題目數量", key: "n", value: 8, options: [[5, "5 題"], [8, "8 題"], [17, "17 題"]] },
+    { label: "答對後", key: "route", value: false, options: [[false, "直接下一題"], [true, "再猜是哪條路線"]] },
+  ], v => clueGame(v));
+}
+function clueGame({ names, n, route }) {
+  const pool = SPOTS.filter(x => x.clue);
+  const qs = shuffle(pool).slice(0, n);
+  let i = 0, wrong = 0, lock = false, miss = 0;
+  const s = screen();
+  const p = el("div"), clue = el("div", "clue"), opts = el("div", "opts"), rev = el("div", "reveal");
+  s.append(p, clue, opts, rev);
+  function ask() {
+    wrong = 0; lock = false; rev.textContent = "";
+    const it = qs[i];
+    p.replaceChildren(promptEl("這是哪一個景點？", `線索：${it.clue}。這是哪一個景點？`, `${i + 1} / ${qs.length}`));
+    clue.textContent = `線索：${it.clue}`;
+    const others = shuffle(SPOTS.filter(x => x !== it)).slice(0, 3);
+    opts.replaceChildren(...shuffle([it, ...others]).map(o => {
+      const b = el("button", "opt", `<img src="${o.img}" alt="${names ? "" : o.nm}">${names ? `<span class="nm">${o.nm}</span>` : ""}`);
+      b.onclick = () => pick(b, o); return b;
+    }));
+    speak(`線索：${it.clue}。這是哪一個景點？`);
+  }
+  function pick(b, o) {
+    if (lock) return;
+    const it = qs[i];
+    if (o === it) {
+      lock = true; b.classList.add("right");
+      opts.querySelectorAll(".opt").forEach(x => x !== b && x.classList.add("dim"));
+      if (route) return askRoute(it);
+      rev.textContent = `${it.nm}　屬於「${routeOf(it.r).nm}」`;
+      toast("答對了！", true, `答對了，是${it.nm}，屬於${routeOf(it.r).nm}`);
+      setTimeout(nextQ, 2600);
+    } else {
+      wrong++; miss++; b.classList.add("dim"); toast("再想想看", false);
+      if (wrong >= hintAfter() + 1) opts.querySelectorAll(".opt").forEach(x => { if (!x.classList.contains("dim") && x !== b && Math.random() < .5 && x.querySelector("img").getAttribute("src") !== it.img) x.classList.add("dim"); });
+    }
+  }
+  function askRoute(it) {
+    rev.replaceChildren();
+    toast("答對了！", true, `答對了，是${it.nm}。它屬於哪一條路線？`);
+    const row = el("div", "bar");
+    ROUTES.forEach(rt => {
+      const b = el("button", "next ghost", rt.nm);
+      b.onclick = () => {
+        if (rt.k === it.r) { row.querySelectorAll("button").forEach(x => x.disabled = true); b.style.borderColor = "var(--ok)"; toast(`${rt.nm}，答對了！`); setTimeout(nextQ, 1800); }
+        else { miss++; b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); toast("再想想看", false); }
+      };
+      row.append(b);
+    });
+    rev.append(row);
+  }
+  function nextQ() { i++; i < qs.length ? ask() : finish("clue", `${qs.length} 題，答錯 ${miss} 次`); }
+  ask();
+}
+
+// ---------- 遊戲三：建築師的祕密 ----------
+function secretSetup() {
+  setupScreen("建築師的祕密", "看照片，想一想建築為什麼這樣蓋。先選擇玩法", [
+    { label: "玩法", key: "mode", value: "quiz", options: [["quiz", "一題一題"], ["pair", "全部配對"]] },
+    { label: "題目數量", key: "n", value: 5, options: [[3, "3 題"], [5, "5 題"], [8, "8 題"], [12, "12 題"]] },
+    { label: "每題答案數", key: "k", value: 3, options: [[2, "2 個"], [3, "3 個"], [4, "4 個"]] },
+  ], v => v.mode === "quiz" ? secretQuiz(v) : secretPair(v));
+}
+function secretQuiz({ n, k }) {
+  const qs = shuffle(SECRETS).slice(0, n);
+  let i = 0, wrong = 0, lock = false, miss = 0;
+  const s = screen();
+  const p = el("div"), body = el("div", "sq"); s.append(p, body);
+  function ask() {
+    wrong = 0; lock = false;
+    const it = qs[i];
+    p.replaceChildren(promptEl(`建築師為什麼要這樣設計？`, `${it.a}。建築師為什麼要這樣設計？`, `${i + 1} / ${qs.length}`));
+    const fig = el("figure", "sqfig", `<div class="ph fitbox"><div class="fitted"><img src="${it.img}" alt="${it.a}"><span class="kind">${it.kind}</span></div></div><figcaption>${it.a}</figcaption>`); fitPhoto(fig.querySelector(".fitted"));
+    const col = el("div", "sqopts");
+    const opts = shuffle([it, ...shuffle(SECRETS.filter(x => x !== it)).slice(0, k - 1)]);
+    opts.forEach(o => {
+      const b = el("button", "pc", `<span class="tag">?</span><span>${o.b}</span>`);
+      b.onclick = () => {
+        if (lock || b.classList.contains("dimmed")) return;
+        if (o === it) {
+          lock = true; b.classList.add("done"); b.querySelector(".tag").textContent = "✓";
+          col.querySelectorAll(".pc").forEach(x => x !== b && x.classList.add("dimmed"));
+          toast("答對了！", true, `答對了。${it.b}。${it.fact}`);
+          col.append(el("div", "fact", `小知識：${it.fact}`));
+          setTimeout(() => { i++; i < qs.length ? ask() : finish("secret", `${qs.length} 個設計，答錯 ${miss} 次`); }, 5200);
+        } else {
+          wrong++; miss++; b.classList.add("dimmed"); toast("再想想看", false);
+          if (wrong >= hintAfter()) [...col.children].find(x => x.dataset.ok)?.classList.add("hint");
+        }
+      };
+      if (o === it) b.dataset.ok = 1;
+      col.append(b);
+    });
+    body.replaceChildren(fig, col);
+    speak(`${it.a}。建築師為什麼要這樣設計？`);
+  }
+  ask();
+}
+function secretPair({ n }) {
+  const set = shuffle(SECRETS).slice(0, Math.min(n, 8)).map((x, i) => ({ ...x, id: i }));
+  n = set.length;
+  let sel = null, matched = 0, miss = 0, wrong = 0;
+  const s = screen();
+  s.append(promptEl("先點左邊的照片，再點右邊的用意", "先點左邊的照片，再點右邊它的用意", `0 / ${n}`));
+  const pairs = el("div", "pairs"), L = el("div", "col photos"), R = el("div", "col");
+  pairs.append(L, R); s.append(pairs);
+  const count = () => s.querySelector(".count").textContent = `${matched} / ${n}`;
+  set.forEach(x => {
+    const b = el("button", "pc", `<img src="${x.img}" alt=""><span>${x.a}</span><span class="tag">?</span>`); b.dataset.id = x.id;
+    b.onclick = () => { if (b.classList.contains("done")) return; L.querySelectorAll(".pc").forEach(y => y.classList.remove("sel")); b.classList.add("sel"); sel = x; wrong = 0; R.querySelectorAll(".pc").forEach(y => y.classList.remove("hint")); speak(x.a); };
+    L.append(b);
+  });
+  shuffle(set).forEach(x => {
+    const b = el("button", "pc", `<span class="tag">?</span><span>${x.b}</span>`); b.dataset.id = x.id;
+    b.onclick = () => {
+      if (b.classList.contains("done")) return;
+      if (!sel) { toast("先點左邊的照片", false); return; }
+      if (sel.id === x.id) {
+        matched++; const no = matched;
+        [L.querySelector(`[data-id="${x.id}"]`), b].forEach(y => { y.classList.remove("sel", "hint"); y.classList.add("done"); y.querySelector(".tag").textContent = no; });
+        toast("配對成功！", true, `${sel.a}，${x.b}`); sel = null; count();
+        if (matched === n) setTimeout(() => finish("secret", `${n} 組設計，答錯 ${miss} 次`), 2600);
+      } else {
+        wrong++; miss++; b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); toast("再想想看", false);
+        if (wrong >= hintAfter()) R.querySelector(`[data-id="${sel.id}"]`).classList.add("hint");
+      }
+    };
+    R.append(b);
+  });
+  speak("先點左邊的照片，再點右邊它的用意");
+}
+
+// ---------- 遊戲五：Tabe! Tabe! 仙境西拉雅（依作品教育訓練手冊） ----------
+const ANIMALS = ["鹿", "牛", "野豬", "蝸牛", "犬"];
+const ELEMENTS = ["風", "土", "山", "水", "人情味"];
+const TABE = {
+  animal: [
+    { img: "img/tabe4.jpg", q: "這隻是什麼動物？", opts: ANIMALS, ans: "鹿", fact: "鹿頭上有銀色鹿角，身上的神秘線條代表「風」" },
+    { img: "img/tabe2.jpg", q: "這隻是什麼動物？", opts: ANIMALS, ans: "牛", fact: "牛頭上的角是菱角的造型，身上的方格是「田」" },
+    { img: "img/tabe1.jpg", q: "這隻是什麼動物？", opts: ANIMALS, ans: "野豬", fact: "野豬身上畫滿了「山」，牠要帶大家去爬山" },
+    { img: "img/tabe5.jpg", q: "這隻是什麼動物？", opts: ANIMALS, ans: "蝸牛", fact: "蝸牛頭上的觸角是找水的雷達，身上布滿水滴" },
+    { img: "img/tabe6.jpg", q: "這隻是什麼動物？", opts: ANIMALS, ans: "犬", fact: "熱情的狗狗身上有愛心，還有很多「人」字" },
+  ],
+  element: [
+    { img: "img/tabe4.jpg", q: "鹿代表西拉雅的什麼？", opts: ELEMENTS, ans: "風", fact: "風帶來雲霧，在左鎮二寮可以看雲海和日出" },
+    { img: "img/tabe1.jpg", q: "野豬代表西拉雅的什麼？", opts: ELEMENTS, ans: "山", fact: "來梅嶺爬山走古道，讓身體和山一樣勇健" },
+    { img: "img/tabe2.jpg", q: "牛代表西拉雅的什麼？", opts: ELEMENTS, ans: "土", fact: "嘉南平原肥沃的土，種出讓人元氣滿滿的農產" },
+    { img: "img/tabe5.jpg", q: "蝸牛代表西拉雅的什麼？", opts: ELEMENTS, ans: "水", fact: "蝸牛揹著水庫，慢慢把水送到平原；西拉雅有五座有名的水庫" },
+    { img: "img/tabe6.jpg", q: "熱情的狗狗（犬）代表西拉雅的什麼？", opts: ELEMENTS, ans: "人情味", fact: "犬一大早就跑下山等大家，要帶大家去關子嶺泡溫泉" },
+  ],
+  more: [
+    { img: "img/tabe6.jpg", q: "狗狗身上的愛心代表什麼？", opts: ["熱情的人情味", "下雨的水滴", "高高的山", "吹來的風"], ans: "熱情的人情味", fact: "狗狗身上還有忙著招呼朋友的人、鞠躬說「歡迎光臨」的人" },
+    { img: "img/tabe7.jpg", q: "「Tabe」是西拉雅語，意思是什麼？", opts: ["你好", "再見", "謝謝", "好吃"], ans: "你好", fact: "Tabe 唸起來像「搭背」，意思是日安、你好、嗨" },
+    { img: "img/tabe5.jpg", q: "雕塑的顏料裡加了官田的什麼？", opts: ["菱角殼", "芒果皮", "稻草", "龍眼殼"], ans: "菱角殼", fact: "官田是全台灣最大的菱角產地，菱角殼做成「菱殼炭粉」再利用" },
+    { img: "img/tabe2.jpg", q: "牛頭上的角，是哪一種農產的造型？", opts: ["菱角", "香蕉", "芒果", "稻穗"], ans: "菱角", fact: "菱角長得像元寶，又叫「黑元寶」，9 到 11 月是產季" },
+    { img: "img/tabe7.jpg", q: "這組雕塑可以和朋友玩什麼遊戲？", opts: ["躲貓貓", "跳繩", "踢足球", "放風箏"], ans: "躲貓貓", fact: "旁邊有一支會數到 10 的「放送頭」：1、2、3……10，躲好了嗎？" },
+    { img: "img/tabe7.jpg", q: "這組雕塑只用了哪兩種顏色？", opts: ["黑和白", "紅和藍", "黃和綠", "粉紅和紫"], ans: "黑和白", fact: "黑白圖紋來自原住民編織紋、古代文字和符號" },
+  ],
+};
+function tabeSetup() {
+  setupScreen("Tabe! Tabe! 仙境西拉雅", "Tabe 是西拉雅語的你好。先選擇題目", [
+    { label: "題目內容", key: "set", value: "both", options: [["animal", "認動物\n5 題"], ["element", "代表什麼\n5 題"], ["both", "都玩\n10 題"], ["all", "全部\n16 題"]] },
+    { label: "每題答案數", key: "k", value: 3, options: [[2, "2 個"], [3, "3 個"], [4, "4 個"]] },
+  ], ({ set, k }) => {
+    const qs = set === "all" ? [...TABE.animal, ...TABE.element, ...shuffle(TABE.more)]
+      : set === "both" ? [...shuffle(TABE.animal), ...shuffle(TABE.element)]
+      : shuffle(TABE[set]);
+    photoQuiz(qs, k, "tabe");
+  });
+}
+// 一張照片配一個問題的通用選擇題
+function photoQuiz(qs, k, key) {
+  let i = 0, wrong = 0, lock = false, miss = 0;
+  const s = screen();
+  const p = el("div"), body = el("div", "sq"); s.append(p, body);
+  function ask() {
+    wrong = 0; lock = false;
+    const it = qs[i];
+    p.replaceChildren(promptEl(it.q, it.q, `${i + 1} / ${qs.length}`));
+    const fig = el("figure", "sqfig", `<div class="ph fitbox"><div class="fitted"><img src="${it.img}" alt=""></div></div>`); fitPhoto(fig.querySelector(".fitted"));
+    const col = el("div", "sqopts");
+    const opts = shuffle([it.ans, ...shuffle(it.opts.filter(o => o !== it.ans)).slice(0, k - 1)]);
+    opts.forEach(o => {
+      const b = el("button", "pc", `<span class="tag">?</span><span>${o}</span>`);
+      if (o === it.ans) b.dataset.ok = 1;
+      b.onclick = () => {
+        if (lock || b.classList.contains("dimmed")) return;
+        if (o === it.ans) {
+          lock = true; b.classList.add("done"); b.querySelector(".tag").textContent = "✓";
+          col.querySelectorAll(".pc").forEach(x => x !== b && x.classList.add("dimmed"));
+          col.append(el("div", "fact", `小知識：${it.fact}`));
+          toast("答對了！", true, `答對了，是${o}。${it.fact}`);
+          setTimeout(() => { i++; i < qs.length ? ask() : finish(key, `${qs.length} 題，答錯 ${miss} 次`); }, 5200);
+        } else {
+          wrong++; miss++; b.classList.add("dimmed"); toast("再想想看", false);
+          if (wrong >= hintAfter()) col.querySelector("[data-ok]").classList.add("hint");
+        }
+      };
+      col.append(b);
+    });
+    body.replaceChildren(fig, col);
+    speak(it.q);
+  }
+  ask();
+}
+
+// ---------- 遊戲六：套色印章明信片（仿館內三色疊印章活動） ----------
+const INK_Y = { nm: "黃色", c: "#f2c230" }, INK_O = { nm: "橘色", c: "#f08054" }, INK_P = { nm: "粉紅色", c: "#e88aa5" }, INK_B = { nm: "藍色", c: "#347acc" };
+const SEAL = { nm: "紀念章", c: "#2a2e30", src: "img/stamp/seal.png" };
+const STAMP_CARDS = [
+  { k: "erliao", ratio: "900 / 512", inks: [INK_Y, INK_O, INK_B], layers: ["img/stamp/erliao-y.png", "img/stamp/erliao-r.png", "img/stamp/erliao-b.png"], spot: "二寮觀日平臺", route: "hill", fact: "二寮是全台灣海拔最低、可以看雲海和日出的地方", others: ["曾文水庫", "八田與一紀念園區", "虎頭埤水庫"] },
+  { k: "zengwen", ratio: "900 / 527", inks: [INK_Y, INK_O, INK_B], layers: ["img/stamp/zengwen-y.png", "img/stamp/zengwen-r.png", "img/stamp/zengwen-b.png"], spot: "曾文水庫", route: "cloud", fact: "曾文水庫是台灣最大的水庫", others: ["二寮觀日平臺", "八田與一紀念園區", "玄空法寺"] },
+  { k: "hatta", ratio: "900 / 520", inks: [INK_Y, INK_O, INK_B], layers: ["img/stamp/hatta-y.png", "img/stamp/hatta-r.png", "img/stamp/hatta-b.png"], spot: "八田與一紀念園區", route: "canal", fact: "八田與一帶大家蓋了烏山頭水庫和嘉南大圳", others: ["二寮觀日平臺", "曾文水庫", "新化老街"] },
+  { k: "wushantou", ratio: "900 / 426", inks: [INK_Y, INK_O, INK_B], layers: ["img/stamp/wushantou-y.png", "img/stamp/wushantou-r.png", "img/stamp/wushantou-b.png"], spot: "烏山頭水庫", route: "canal", fact: "烏山頭水庫的湖面彎彎曲曲像珊瑚，所以又叫「珊瑚潭」", others: ["曾文水庫", "虎頭埤水庫", "尖山埤江南渡假村"] },
+  { k: "guantian", ratio: "900 / 614", inks: [INK_Y, INK_P, INK_B], layers: ["img/stamp/guantian-y.png", "img/stamp/guantian-r.png", "img/stamp/guantian-b.png"], spot: "官田遊客中心", route: "canal", fact: "這就是我們今天來的官田遊客中心！", others: ["南化遊客中心", "中埔遊客中心", "新化老街"] },
+  // 景點待老師確認，先只蓋章不出題
+  { k: "avenue", ratio: "900 / 646", inks: [INK_Y, INK_P, INK_B], layers: ["img/stamp/avenue-y.png", "img/stamp/avenue-r.png", "img/stamp/avenue-b.png"], spot: null },
+];
+function stampSetup() {
+  setupScreen("套色印章明信片", "用三個印章，蓋出一張明信片。先選擇玩法", [
+    { label: "要蓋哪幾張明信片", key: "which", value: "3", options: [["3", "隨機 3 張"], ["all", "6 張全蓋"], ...STAMP_CARDS.map((c, i) => [c.k, `第 ${i + 1} 張`])] },
+    { label: "蓋章方式", key: "order", value: true, options: [[true, "照順序 1→2→3"], [false, "自由蓋"]] },
+    { label: "最後加蓋紀念章", key: "seal", value: true, options: [[true, "要"], [false, "不要"]] },
+  ], ({ which, order, seal }) => stampGame(which === "all" ? STAMP_CARDS : which === "3" ? shuffle(STAMP_CARDS).slice(0, 3) : STAMP_CARDS.filter(c => c.k === which), order, seal));
+}
+function stampGame(cards, order, withSeal) {
+  let ci = 0, miss = 0;
+  const s = screen();
+  const p = el("div"), body = el("div", "stampwrap"), below = el("div", "reveal");
+  s.append(p, body, below);
+  function stampSound() {
+    if (!state.sound) return;
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime; o.type = "triangle"; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(60, t + .18); g.gain.setValueAtTime(.4, t); g.gain.exponentialRampToValueAtTime(.001, t + .25); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + .3); } catch (e) {}
+  }
+  function play() {
+    const c = cards[ci];
+    let next = 0; const done = new Set();
+    const inks = c.inks.map((ink, j) => ({ ...ink, no: j + 1, src: c.layers[j] }));
+    if (withSeal) inks.push({ ...SEAL, no: 4 });
+    const total = inks.length, seq = inks.map(x => x.no).join(" → ");
+    const say = order ? `先蓋 1 號${inks[0].nm}印章` : `${total} 個印章都蓋上去，看看會變成什麼`;
+    p.replaceChildren(promptEl(order ? `照順序蓋印章：${seq}` : `把 ${total} 個印章都蓋上去`, say, `${ci + 1} / ${cards.length}`));
+    below.replaceChildren();
+    const paper = el("div", "pcard fitted"); paper.style.setProperty("--r", c.ratio);
+    const pbox = el("div", "fitbox"); pbox.append(paper);
+    const layers = inks.map(ink => { const im = el("img", ink === inks[3] ? "layer seal" : "layer"); im.src = ink.src; im.alt = ""; paper.append(im); return im; });
+    const stamps = el("div", "stamps");
+    inks.forEach((ink, j) => {
+      const b = el("button", "stampbtn", `<span class="handle"><span class="no">${ink.no}</span></span><span class="pad"><img src="${ink.src}" alt=""></span><span class="ink" style="color:${ink.c}">${ink.no} 號・${ink.nm}</span>`);
+      b.onclick = () => {
+        if (done.has(j)) { toast("這個已經蓋過了", false); return; }
+        if (order && j !== next) { miss++; toast(`先蓋 ${next + 1} 號`, false, `先蓋 ${next + 1} 號${inks[next].nm}印章`); stamps.children[next].classList.add("hint"); return; }
+        done.add(j); next++;
+        b.classList.add("used", "press"); stamps.querySelectorAll(".stampbtn").forEach(x => x.classList.remove("hint"));
+        paper.classList.remove("thump"); void paper.offsetWidth; paper.classList.add("thump");
+        layers[j].classList.add("on"); stampSound();
+        if (done.size === total) setTimeout(reveal, 1200);
+        else speak(order ? `蓋好了！再蓋 ${next + 1} 號${inks[next].nm}` : "蓋好了！");
+      };
+      stamps.append(b);
+    });
+    body.replaceChildren(pbox, stamps);
+    speak(say);
+  }
+  function reveal() {
+    const c = cards[ci];
+    if (!c.spot) { toast("明信片完成了！"); setTimeout(nextCard, 2600); return; }
+    toast("明信片完成了！", true, "明信片完成了！這是哪個景點？");
+    p.replaceChildren(promptEl("這是哪個景點？", "這是哪個景點？", `${ci + 1} / ${cards.length}`));
+    const row = el("div", "bar");
+    shuffle([c.spot, ...shuffle(c.others).slice(0, 2)]).forEach(o => {
+      const b = el("button", "next ghost", o);
+      b.onclick = () => {
+        if (o !== c.spot) { miss++; b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); toast("再想想看", false); return; }
+        row.querySelectorAll("button").forEach(x => x.disabled = true); b.style.borderColor = "var(--ok)";
+        toast("答對了！", true, `答對了，是${c.spot}。它屬於哪一條路線？`);
+        setTimeout(askRoute, 1500);
+      };
+      row.append(b);
+    });
+    below.replaceChildren(row);
+  }
+  function askRoute() {
+    const c = cards[ci];
+    p.replaceChildren(promptEl(`「${c.spot}」屬於哪一條路線？`, `${c.spot}屬於哪一條路線？`, `${ci + 1} / ${cards.length}`));
+    const row = el("div", "bar");
+    ROUTES.forEach(rt => {
+      const b = el("button", "next ghost", rt.nm);
+      b.onclick = () => {
+        if (rt.k !== c.route) { miss++; b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); toast("再想想看", false); return; }
+        row.querySelectorAll("button").forEach(x => x.disabled = true); b.style.borderColor = "var(--ok)";
+        below.append(el("div", "fact", `小知識：${c.fact}`));
+        toast(`${rt.nm}，答對了！`, true, `答對了，是${rt.nm}。${c.fact}`);
+        setTimeout(nextCard, 4200);
+      };
+      row.append(b);
+    });
+    below.replaceChildren(row);
+  }
+  function nextCard() { ci++; ci < cards.length ? play() : finish("stamp", `蓋好 ${cards.length} 張明信片，答錯 ${miss} 次`); }
+  play();
+}
+
+// ---------- 遊戲七：湖丘之物（館內植物標本展示櫃，標本採自虎頭埤及左鎮周邊） ----------
+const PLANTS = [
+  { nm: "桃花心木", img: "img/plants/mahogany-photo.jpg", part: "種子", feat: "果實裂開後掉出有一片翅膀的種子，掉下來會像直升機一樣轉圈圈" },
+  { nm: "大花紫薇", img: "img/plants/crapemyrtle-dry.jpg", part: "果實", feat: "夏天開紫色的花，花謝後結出一串圓圓的果實" },
+  { nm: "羊蹄甲", img: "img/plants/orchidtree-photo.jpg", part: "葉子", feat: "葉子前端裂成兩半，很像羊的腳蹄" },
+  { nm: "馬拉巴栗", img: "img/plants/moneytree-photo.jpg", part: "種子", feat: "常被種成盆栽放在家裡，又叫「發財樹」" },
+  { nm: "火焰木", img: "img/plants/tuliptree-photo.jpg", part: "果實", feat: "開橘紅色的大花像火焰，果實像一艘小船" },
+  { nm: "阿勃勒", img: "img/plants/goldenshower-photo.jpg", part: "果實", feat: "夏天開一串串黃花像下「黃金雨」，果實是長長的黑色棍子" },
+  { nm: "油桐", img: "img/plants/tung.svg", photos: ["img/plants/tung-photo.jpg"], part: "種子", feat: "春天開白花，花掉下來像下雪，叫做「五月雪」" },
+  { nm: "桂花", img: "img/plants/osmanthus-photo.jpg", part: "花", feat: "花小小的，但是非常非常香" },
+  { nm: "銀樺", img: "img/plants/silveroak-photo.jpg", part: "葉子", feat: "葉子分成很多細細的條，像一根羽毛" },
+  { nm: "茄苳", img: "img/plants/bishopwood-photo.jpg", part: "果實", feat: "一根葉柄上長三片小葉子，很多老樹都是茄苳" },
+  { nm: "樟樹", img: "img/plants/camphor-photo.jpg", part: "樹幹切片", feat: "葉子揉一揉會有樟腦的香味，樹幹切開可以數年輪" },
+  { nm: "大葉欖仁", img: "img/plants/almond-photo.jpg", part: "葉子", feat: "葉子大大的，冬天會變紅再掉光，春天再長出綠色新葉" },
+];
+function plantSetup() {
+  setupScreen("湖丘之物：認識植物", "看看植物的種子、果實和葉子。先選擇玩法", [
+    { label: "玩法", key: "mode", value: "look", options: [["look", "看標本\n猜植物"], ["clue", "聽特徵\n找標本"]] },
+    { label: "題目數量", key: "n", value: 6, options: [[4, "4 題"], [6, "6 題"], [12, "12 題"]] },
+    { label: "每題答案數", key: "k", value: 3, options: [[2, "2 個"], [3, "3 個"], [4, "4 個"]] },
+  ], ({ mode, n, k }) => {
+    const qs = shuffle(PLANTS).slice(0, n);
+    if (mode === "look") photoQuiz(qs.map(x => { const im = shuffle([x.img, ...(x.photos || [])])[0]; return { img: im, q: `這是哪一種植物的${im.endsWith("tung-photo.jpg") ? "果實" : x.part}？`, opts: PLANTS.map(y => y.nm), ans: x.nm, fact: `${x.nm}：${x.feat}` }; }), k, "plant");
+    else plantClue(qs, k);
+  });
+}
+function plantClue(qs, k) {
+  let i = 0, wrong = 0, lock = false, miss = 0;
+  const s = screen();
+  const p = el("div"), clue = el("div", "clue"), opts = el("div", "opts"), rev = el("div", "reveal");
+  s.append(p, clue, opts, rev);
+  function ask() {
+    wrong = 0; lock = false; rev.textContent = "";
+    const it = qs[i];
+    p.replaceChildren(promptEl("聽特徵，找出是哪一種植物", `特徵：${it.feat}。是哪一種植物？`, `${i + 1} / ${qs.length}`));
+    clue.textContent = `特徵：${it.feat}`;
+    opts.style.setProperty("--k", k);
+    opts.replaceChildren(...shuffle([it, ...shuffle(PLANTS.filter(x => x !== it)).slice(0, k - 1)]).map(o => {
+      const b = el("button", "opt", `<img src="${o.img}" alt=""><span class="nm">${o.nm}</span>`);
+      b.onclick = () => {
+        if (lock || b.classList.contains("dim")) return;
+        if (o === it) {
+          lock = true; b.classList.add("right"); opts.querySelectorAll(".opt").forEach(x => x !== b && x.classList.add("dim"));
+          rev.textContent = `這是${it.nm}的${it.part}`;
+          toast("答對了！", true, `答對了，是${it.nm}`);
+          setTimeout(() => { i++; i < qs.length ? ask() : finish("plant", `${qs.length} 題，答錯 ${miss} 次`); }, 2600);
+        } else {
+          wrong++; miss++; b.classList.add("dim"); toast("再想想看", false);
+          if (wrong >= hintAfter()) [...opts.children].find(x => x.querySelector(".nm").textContent === it.nm).classList.add("hintb");
+        }
+      };
+      return b;
+    }));
+    speak(`特徵：${it.feat}。是哪一種植物？`);
+  }
+  ask();
+}
+
+// ---------- 遊戲四：實景找一找（老師上傳照片） ----------
+// 照片與框選存在這台裝置的瀏覽器（IndexedDB）
+const DB = {
+  mem: [],
+  open() { return new Promise((res, rej) => { try { const r = indexedDB.open("siraya-find", 1); r.onupgradeneeded = () => r.result.createObjectStore("photos", { keyPath: "id" }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }); },
+  async all() { try { const db = await this.open(); return await new Promise(res => { const q = db.transaction("photos").objectStore("photos").getAll(); q.onsuccess = () => res(q.result.sort((a, b) => a.id - b.id)); q.onerror = () => res(this.mem); }); } catch (e) { return this.mem; } },
+  async put(p) { const i = this.mem.findIndex(x => x.id === p.id); i < 0 ? this.mem.push(p) : this.mem[i] = p; try { const db = await this.open(); db.transaction("photos", "readwrite").objectStore("photos").put(p); } catch (e) {} },
+  async del(id) { this.mem = this.mem.filter(x => x.id !== id); try { const db = await this.open(); db.transaction("photos", "readwrite").objectStore("photos").delete(id); } catch (e) {} },
+};
+function shrink(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = img.width * k; c.height = img.height * k; c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", .82)); };
+    img.onerror = rej; img.src = url;
+  });
+}
+async function findHome() {
+  const photos = [...FIND_PRESETS, ...(await DB.all())];
+  const targets = photos.flatMap(p => [...new Set(p.boxes.map(b => b.label))].map(label => ({ p, label, rects: p.boxes.filter(b => b.label === label) })));
+  const s = screen();
+  s.append(promptEl("實景找一找", "用遊客中心的照片，找出建築的設計"));
+  if (!targets.length) {
+    s.append(el("div", "empty", `<h2>還沒有照片</h2><ol><li>按「老師設定」，加入遊客中心的照片（事前勘查或網路上的官方照片）。</li><li>選一個題目，例如「入口的三個壺」，在照片上拖曳框出答案的位置。</li><li>回到這裡按「開始」，學生點照片找答案。</li></ol><p class="tip">照片只存在這台電腦的瀏覽器裡，不會上傳。</p>`));
+  } else {
+    s.append(el("div", "empty", `<h2>${photos.length} 張照片、${targets.length} 個題目</h2><p class="tip">內建 ${FIND_PRESETS.length} 張遊客中心照片；老師可以按「老師設定」加入自己拍的照片。<br>學生點照片上的位置找答案，答錯 ${hintAfter()} 次會閃爍提示。</p>`));
+  }
+  const bar = el("div", "bar");
+  if (targets.length) { [6, 12].forEach(k => { const g = el("button", "next", `開始（${k} 題）`); g.onclick = () => findGame(shuffle(targets).slice(0, k)); bar.append(g); }); }
+  const t = el("button", "next alt", "老師設定"); t.onclick = () => findEdit(0); bar.append(t);
+  s.append(bar);
+}
+async function findEdit(idx) {
+  let photos = await DB.all();
+  const s = screen();
+  s.append(promptEl("老師設定：先選題目，再在照片上拖曳框出答案", "老師設定"));
+  const tools = el("div", "tools");
+  const up = el("label", "chip", `加入照片<input type="file" id="findUpload" accept="image/*" multiple hidden>`);
+  tools.append(up);
+  const thumbs = el("div", "thumbs"); tools.append(thumbs);
+  s.append(tools);
+  const labels = el("div", "tools"); s.append(labels);
+  const stage = el("div", "stage"); s.append(stage);
+  const bar = el("div", "bar"); const done = el("button", "next", "完成"); done.onclick = findHome; bar.append(done); s.append(bar);
+  let label = FIND_LABELS[0];
+  FIND_LABELS.forEach(t => { const b = el("button", "chip", t); b.setAttribute("aria-pressed", t === label); b.onclick = () => { label = t; labels.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b)); custom.value = ""; }; labels.append(b); });
+  const custom = el("input"); custom.type = "text"; custom.id = "findCustom"; custom.placeholder = "自訂題目"; custom.oninput = () => { if (custom.value.trim()) { label = custom.value.trim(); labels.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", false)); } };
+  labels.append(custom);
+  $("#findUpload", up).onchange = async e => {
+    for (const f of e.target.files) { try { await DB.put({ id: Date.now() + Math.random(), src: await shrink(f), boxes: [] }); } catch (err) { toast("這張照片讀不到", false); } }
+    findEdit((await DB.all()).length - 1);
+  };
+  function drawThumbs() {
+    thumbs.replaceChildren(...photos.map((p, j) => { const b = el("button", "", `<img src="${p.src}" alt="照片 ${j + 1}">`); b.setAttribute("aria-pressed", j === idx); b.onclick = () => findEdit(j); return b; }));
+  }
+  drawThumbs();
+  const cur = photos[idx];
+  if (!cur) { stage.append(el("div", "empty", "<h2>按「加入照片」開始</h2>")); return; }
+  const ph = el("div", "photo edit fitted", `<img src="${cur.src}" alt="">`); stage.classList.add("fitbox"); stage.append(ph); fitPhoto(ph);
+  const del = el("button", "chip", "刪除這張照片"); del.onclick = async () => { await DB.del(cur.id); findEdit(0); }; tools.append(del);
+  function drawBoxes() {
+    ph.querySelectorAll(".box").forEach(b => b.remove());
+    cur.boxes.forEach((b, j) => {
+      const d = el("div", "box", `<span>${b.label}　✕</span>`); Object.assign(d.style, { left: b.x + "%", top: b.y + "%", width: b.w + "%", height: b.h + "%" });
+      d.querySelector("span").onpointerdown = ev => { ev.stopPropagation(); cur.boxes.splice(j, 1); DB.put(cur); drawBoxes(); };
+      ph.append(d);
+    });
+  }
+  drawBoxes();
+  ph.onpointerdown = e => {
+    const q = ph.getBoundingClientRect(); const x0 = (e.clientX - q.left) / q.width * 100, y0 = (e.clientY - q.top) / q.height * 100;
+    const d = el("div", "box drawing"); ph.append(d); ph.setPointerCapture(e.pointerId);
+    let r = { x: x0, y: y0, w: 0, h: 0 };
+    ph.onpointermove = ev => {
+      const x1 = Math.max(0, Math.min(100, (ev.clientX - q.left) / q.width * 100)), y1 = Math.max(0, Math.min(100, (ev.clientY - q.top) / q.height * 100));
+      r = { x: Math.min(x0, x1), y: Math.min(y0, y1), w: Math.abs(x1 - x0), h: Math.abs(y1 - y0) };
+      Object.assign(d.style, { left: r.x + "%", top: r.y + "%", width: r.w + "%", height: r.h + "%" });
+    };
+    ph.onpointerup = () => {
+      ph.onpointermove = ph.onpointerup = null; d.remove();
+      if (r.w < 2 || r.h < 2) return;
+      cur.boxes.push({ ...r, label }); DB.put(cur); drawBoxes();
+    };
+  };
+}
+function findGame(qs) {
+  let i = 0, wrong = 0, lock = false, miss = 0;
+  const s = screen();
+  const p = el("div"), stage = el("div", "stage"); s.append(p, stage);
+  function ask() {
+    wrong = 0; lock = false;
+    const { p: ph, label, rects } = qs[i];
+    const many = rects.length > 1 ? `（有 ${rects.length} 個，找到一個就可以）` : "";
+    p.replaceChildren(promptEl(`找到「${label}」${many}`, `請在照片上找到${label}`, `${i + 1} / ${qs.length}`));
+    const wrap = el("div", "photo fitted", `<img src="${ph.src}" alt="遊客中心照片">`); stage.classList.add("fitbox"); fitPhoto(wrap);
+    const boxes = rects.map(b => { const d = el("div", "box"); Object.assign(d.style, { left: b.x + "%", top: b.y + "%", width: b.w + "%", height: b.h + "%" }); wrap.append(d); return d; });
+    stage.replaceChildren(wrap);
+    wrap.onclick = e => {
+      if (lock) return;
+      const q = wrap.getBoundingClientRect(), x = (e.clientX - q.left) / q.width * 100, y = (e.clientY - q.top) / q.height * 100, pad = 3;
+      if (rects.some(b => x >= b.x - pad && x <= b.x + b.w + pad && y >= b.y - pad && y <= b.y + b.h + pad)) {
+        lock = true; boxes.forEach(d => { d.classList.remove("hint"); d.classList.add("found"); }); toast("找到了！");
+        setTimeout(() => { i++; i < qs.length ? ask() : finish("find", `找到 ${qs.length} 個設計，答錯 ${miss} 次`); }, 1600);
+      } else { wrong++; miss++; toast("再找找看", false); if (wrong >= hintAfter()) boxes.forEach(d => d.classList.add("hint")); }
+    };
+    speak(`請在照片上找到${label}`);
+  }
+  ask();
+}
+
+// ---------- 證書 ----------
+function showCert() {
+  const s = screen();
+  const c = el("div", "cert", `<h2>寶石鑑定「加」</h2><p>鑑定完 ${Object.keys(state.done).length} 種西拉雅寶石，今天的知識又「加」了好多！</p><p>我認識了水圳之源、湖丘時光、雲水之間，知道建築師的祕密，認識了 Tabe! Tabe! 的五隻動物，完成了自己的套色明信片，也認識了湖丘的植物</p><div class="big">${Object.keys(state.done).map(() => gem()).join("")}</div>`);
+  const bar = el("div", "bar"); const b = el("button", "next alt", "重新開始");
+  b.onclick = () => { for (const k in state.done) state.done[k] = false; renderStars(); save(); home(); };
+  bar.append(b); c.append(bar); s.append(c);
+  speak("恭喜你，成為寶石鑑定加！今天的知識又加了好多！"); chime(true);
+}
+
+// ---------- 工具列與狀態 ----------
+$("#bHome").onclick = home;
+$("#bEasy").onclick = e => { state.easy = !state.easy; e.currentTarget.setAttribute("aria-pressed", state.easy); save(); };
+$("#bSound").onclick = e => { state.sound = !state.sound; syncSound(); if (!state.sound) try { speechSynthesis.cancel(); } catch (_) {} save(); };
+$("#bFull").onclick = async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen(); } catch (e) { toast("這個畫面不能全螢幕", false); } };
+function syncSound() { $("#bSound").setAttribute("aria-pressed", state.sound); $("#bSound").textContent = state.sound ? "聲音 開" : "聲音 關"; }
+try { speechSynthesis.getVoices(); } catch (e) {}
+function save() { try { localStorage.setItem("siraya-game2", JSON.stringify({ done: state.done, easy: state.easy, sound: state.sound })); } catch (e) {} }
+function start(data) {
+  let saved = data && data.done ? data : null;
+  if (!saved) try { saved = JSON.parse(localStorage.getItem("siraya-game2") || "null"); } catch (e) {}
+  if (saved) { for (const k in state.done) state.done[k] = !!(saved.done || {})[k]; state.easy = !!saved.easy; state.sound = saved.sound !== false; }
+  $("#bEasy").setAttribute("aria-pressed", state.easy); syncSound(); renderStars(); home();
+}
+window.claude?.hot?.snapshot?.(() => ({ done: state.done, easy: state.easy, sound: state.sound }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
