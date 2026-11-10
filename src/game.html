@@ -716,20 +716,17 @@ function photoQuiz(qs, k, key) {
 const INK_Y = { nm: "黃色", c: "#f2c230" }, INK_O = { nm: "橘色", c: "#f08054" }, INK_P = { nm: "粉紅色", c: "#e88aa5" }, INK_B = { nm: "藍色", c: "#347acc" };
 const SEAL = { nm: "紀念章", c: "#2a2e30", src: "img/stamp/seal.png" };
 const STAMP_CARDS = [
-  { k: "erliao", onsite: true, ratio: "900 / 679", inks: [INK_Y, INK_P, INK_B], layers: ["img/stamp/erliao-y.png", "img/stamp/erliao-r.png", "img/stamp/erliao-b.png"], spot: "二寮觀日平臺", route: "hill", fact: "二寮是全台灣海拔最低、可以看雲海和日出的地方", others: ["曾文水庫", "八田與一紀念園區", "虎頭埤水庫"] },
-  { k: "zengwen", ratio: "900 / 527", inks: [INK_Y, INK_O, INK_B], layers: ["img/stamp/zengwen-y.png", "img/stamp/zengwen-r.png", "img/stamp/zengwen-b.png"], spot: "曾文水庫", route: "cloud", fact: "曾文水庫是台灣最大的水庫", others: ["二寮觀日平臺", "八田與一紀念園區", "玄空法寺"] },
-  { k: "hatta", ratio: "900 / 520", inks: [INK_Y, INK_O, INK_B], layers: ["img/stamp/hatta-y.png", "img/stamp/hatta-r.png", "img/stamp/hatta-b.png"], spot: "八田與一紀念園區", route: "canal", fact: "八田與一帶大家蓋了烏山頭水庫和嘉南大圳", others: ["二寮觀日平臺", "曾文水庫", "新化老街"] },
-  { k: "wushantou", onsite: true, ratio: "900 / 582", inks: [INK_Y, INK_O, INK_B], layers: ["img/stamp/wushantou-y.png", "img/stamp/wushantou-r.png", "img/stamp/wushantou-b.png"], spot: "烏山頭水庫風景區", route: "canal", fact: "烏山頭水庫的湖面彎彎曲曲像珊瑚，所以又叫「珊瑚潭」", others: ["曾文水庫", "虎頭埤水庫", "柳營尖山埤渡假村"] },
-  { k: "guantian", ratio: "900 / 614", inks: [INK_Y, INK_P, INK_B], layers: ["img/stamp/guantian-y.png", "img/stamp/guantian-r.png", "img/stamp/guantian-b.png"], spot: "官田遊客中心", route: "canal", fact: "這就是我們今天來的官田遊客中心！", others: ["南化遊客中心", "中埔遊客中心", "新化老街"] },
+  { k: "erliao", ratio: "900 / 679", inks: [INK_Y, INK_P, INK_B], layers: ["img/stamp/erliao-y.png", "img/stamp/erliao-r.png", "img/stamp/erliao-b.png"], spot: "二寮觀日平臺", route: "hill", fact: "二寮是全台灣海拔最低、可以看雲海和日出的地方", others: ["曾文水庫", "八田與一紀念園區", "虎頭埤水庫"] },
+  { k: "wushantou", ratio: "900 / 582", inks: [INK_Y, INK_O, INK_B], layers: ["img/stamp/wushantou-y.png", "img/stamp/wushantou-r.png", "img/stamp/wushantou-b.png"], spot: "烏山頭水庫風景區", route: "canal", fact: "烏山頭水庫的湖面彎彎曲曲像珊瑚，所以又叫「珊瑚潭」", others: ["曾文水庫", "虎頭埤水庫", "柳營尖山埤渡假村"] },
   // 景點待老師確認，先只蓋章不出題
-  { k: "avenue", onsite: true, ratio: "835 / 640", inks: [INK_Y, INK_P, INK_B], layers: ["img/stamp/avenue-y.png", "img/stamp/avenue-r.png", "img/stamp/avenue-b.png"], spot: null },
+  { k: "avenue", ratio: "835 / 640", inks: [INK_Y, INK_P, INK_B], layers: ["img/stamp/avenue-y.png", "img/stamp/avenue-r.png", "img/stamp/avenue-b.png"], spot: null },
 ];
 function stampSetup() {
   setupScreen("套色印章明信片", "用三個印章，蓋出一張明信片。先選擇玩法", [
-    { label: "要蓋哪幾張明信片", key: "which", value: "onsite", options: [["onsite", "現場三組"], ["3", "隨機 3 張"], ["all", "6 張全蓋"], ...STAMP_CARDS.map((c, i) => [c.k, `第 ${i + 1} 張`])] },
+    { label: "要蓋哪幾張明信片", key: "which", value: "all", options: [["all", "三組都蓋"], ...STAMP_CARDS.map(c => [c.k, c.spot || "花樹步道"])] },
     { label: "蓋章方式", key: "order", value: true, options: [[true, "照順序 1→2→3"], [false, "自由蓋"]] },
     { label: "最後加蓋紀念章", key: "seal", value: true, options: [[true, "要"], [false, "不要"]] },
-  ], ({ which, order, seal }) => stampGame(which === "onsite" ? STAMP_CARDS.filter(c => c.onsite) : which === "all" ? STAMP_CARDS : which === "3" ? shuffle(STAMP_CARDS).slice(0, 3) : STAMP_CARDS.filter(c => c.k === which), order, seal));
+  ], ({ which, order, seal }) => stampGame(which === "all" ? STAMP_CARDS : STAMP_CARDS.filter(c => c.k === which), order, seal));
 }
 function stampGame(cards, order, withSeal) {
   let ci = 0, miss = 0;
