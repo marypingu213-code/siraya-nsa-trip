@@ -191,6 +191,13 @@ main { flex: 1; min-height: 0; position: relative; padding-block: clamp(10px, 1.
 .thumbs button[aria-pressed="true"] { border-color: var(--red); }
 .thumbs img { height: 54px; display: block; }
 
+/* 語音選單 */
+.voicepanel { position: fixed; z-index: 80; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + 70px); width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 100px); overflow: auto; background: var(--card); border-radius: 20px; box-shadow: 0 16px 40px rgba(0,0,0,.25); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.voicepanel h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(20px, 1.8vw, 32px); }
+.voicepanel .warn { margin: 0; background: #fff6dc; border-left: 6px solid var(--mango); padding: .5em .7em; border-radius: 0 10px 10px 0; font-size: clamp(14px, 1.2vw, 20px); line-height: 1.5; }
+.vopt { display: flex; gap: .6em; align-items: center; text-align: left; background: var(--paper); border: 3px solid transparent; border-radius: 12px; padding: .5em .7em; font-size: clamp(14px, 1.2vw, 20px); }
+.vopt b { background: var(--band); color: #fff; border-radius: 999px; padding: 0 .6em; font-size: .85em; flex: none; }
+.vopt[aria-pressed="true"] { border-color: var(--red); background: #fdeae6; }
 /* 回饋與證書 */
 .toast { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) scale(.6); opacity: 0; pointer-events: none; background: var(--ok); color: #fff; font-family: var(--display); font-size: clamp(32px, 5vw, 100px); padding: .2em .8em; border-radius: 999px; transition: .25s; z-index: 60; white-space: nowrap; }
 .toast.try { background: var(--blue); }
@@ -222,6 +229,7 @@ main { flex: 1; min-height: 0; position: relative; padding-block: clamp(10px, 1.
     <button class="tbtn" id="bHome">首頁</button>
     <button class="tbtn" id="bEasy" aria-pressed="false">提示快一點</button>
     <button class="tbtn" id="bSound" aria-pressed="true">聲音 開</button>
+    <button class="tbtn" id="bVoice">語音</button>
     <button class="tbtn" id="bFull">全螢幕</button>
   </header>
   <main id="main"></main>
@@ -317,7 +325,7 @@ const FIND_LABELS = ["入口的壺（圓弧形房間）", "折板大屋頂", "�
 
 const $ = (s, r = document) => r.querySelector(s);
 const main = $("#main");
-const state = { done: { route: false, clue: false, secret: false, find: false, tabe: false, stamp: false, plant: false }, easy: false, sound: true };
+const state = { done: { route: false, clue: false, secret: false, find: false, tabe: false, stamp: false, plant: false }, easy: false, sound: true, voice: "" };
 const GAMES = {
   route: { name: "三大主軸配對", lv: "分類", ds: "把展板上的 24 個景點，放進「水圳之源、湖丘時光、雲水之間」", ph: "img/hero-canal.jpg", run: routeSetup },
   clue: { name: "聽線索猜景點", lv: "推理", ds: "聽一句線索，從 4 張展板圖片中找出是哪個景點、屬於哪條路線", ph: "img/hill4.jpg", run: clueSetup },
@@ -347,11 +355,39 @@ function speak(text) {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text.replace(/[「」（）]/g, " "));
     u.lang = "zh-TW"; u.rate = 0.85;
-    const vs = speechSynthesis.getVoices();
-    const v = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang));
+    const v = pickVoice();
     if (v) u.voice = v;
     speechSynthesis.speak(u);
   } catch (e) {}
+}
+// 語音：優先用台灣國語（zh-TW），老師也可以在「語音」選單指定
+const TW_NAME = /台灣|臺灣|Taiwan|HsiaoChen|HsiaoYu|Hanhan|Yating|Zhiwei|YunJhe|Mei-?Jia/i;
+const isTW = v => /zh[-_]TW/i.test(v.lang) || TW_NAME.test(v.name);
+function zhVoices() {
+  let vs = []; try { vs = speechSynthesis.getVoices().filter(v => /^(zh|cmn)/i.test(v.lang) || TW_NAME.test(v.name)); } catch (e) {}
+  // 台灣語音排最前面，其次是自然（Natural / Online）語音
+  return vs.sort((a, b) => (isTW(b) - isTW(a)) || (/Natural|Online/i.test(b.name) - /Natural|Online/i.test(a.name)));
+}
+function pickVoice() {
+  const vs = zhVoices();
+  return vs.find(v => v.voiceURI === state.voice) || vs.find(isTW) || vs[0] || null;
+}
+function voicePanel() {
+  let pn = $("#voicePanel");
+  if (pn) { pn.remove(); return; }
+  pn = el("div", "voicepanel"); pn.id = "voicePanel";
+  const vs = zhVoices(), cur = pickVoice();
+  pn.append(el("h3", "", "選擇朗讀的聲音"));
+  if (!vs.some(isTW)) pn.append(el("p", "warn", "這台裝置沒有台灣國語語音。請到系統設定加裝「中文（台灣）」語音：Windows 在「設定 → 時間與語言 → 語音」，iPad 在「設定 → 輔助使用 → 朗讀內容 → 聲音 → 中文（台灣）」。裝好後重新開啟這個網頁。"));
+  if (!vs.length) pn.append(el("p", "", "找不到任何中文語音。"));
+  vs.forEach(v => {
+    const b = el("button", "vopt", `${isTW(v) ? "<b>台灣</b>" : ""}<span>${v.name}</span>`);
+    b.setAttribute("aria-pressed", v === cur);
+    b.onclick = () => { state.voice = v.voiceURI; save(); pn.querySelectorAll(".vopt").forEach(x => x.setAttribute("aria-pressed", x === b)); speak("你好，我是寶石鑑定室的小幫手"); };
+    pn.append(b);
+  });
+  const close = el("button", "next alt", "完成"); close.onclick = () => pn.remove(); pn.append(close);
+  document.body.append(pn);
 }
 let toastT;
 function toast(text, ok = true, say = text) {
@@ -997,12 +1033,13 @@ $("#bEasy").onclick = e => { state.easy = !state.easy; e.currentTarget.setAttrib
 $("#bSound").onclick = e => { state.sound = !state.sound; syncSound(); if (!state.sound) try { speechSynthesis.cancel(); } catch (_) {} save(); };
 $("#bFull").onclick = async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen(); } catch (e) { toast("這個畫面不能全螢幕", false); } };
 function syncSound() { $("#bSound").setAttribute("aria-pressed", state.sound); $("#bSound").textContent = state.sound ? "聲音 開" : "聲音 關"; }
-try { speechSynthesis.getVoices(); } catch (e) {}
-function save() { try { localStorage.setItem("siraya-game2", JSON.stringify({ done: state.done, easy: state.easy, sound: state.sound })); } catch (e) {} }
+try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); } catch (e) {}
+$("#bVoice").onclick = voicePanel;
+function save() { try { localStorage.setItem("siraya-game2", JSON.stringify({ done: state.done, easy: state.easy, sound: state.sound, voice: state.voice })); } catch (e) {} }
 function start(data) {
   let saved = data && data.done ? data : null;
   if (!saved) try { saved = JSON.parse(localStorage.getItem("siraya-game2") || "null"); } catch (e) {}
-  if (saved) { for (const k in state.done) state.done[k] = !!(saved.done || {})[k]; state.easy = !!saved.easy; state.sound = saved.sound !== false; }
+  if (saved) { for (const k in state.done) state.done[k] = !!(saved.done || {})[k]; state.easy = !!saved.easy; state.sound = saved.sound !== false; state.voice = saved.voice || ""; }
   $("#bEasy").setAttribute("aria-pressed", state.easy); syncSound(); renderStars(); home();
 }
 window.claude?.hot?.snapshot?.(() => ({ done: state.done, easy: state.easy, sound: state.sound }));
