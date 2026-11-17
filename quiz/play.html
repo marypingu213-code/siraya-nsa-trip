@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>寶石鑑定室｜答題</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="quiz.css">
+<style>
+/* 手機端：連線 → 點名字 → 等老師開始 → 一題一題作答 → 完成 */
+body { display: flex; flex-direction: column; min-height: 100%; height: auto; }
+main { flex: 1; display: flex; flex-direction: column; gap: 14px; padding-block: 16px calc(16px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 760px; width: 100%; margin: 0 auto; }
+.center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; }
+.big { font-family: var(--display); font-size: clamp(28px, 8vw, 52px); line-height: 1.25; }
+.names { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.names button { background: var(--card); border: 4px solid var(--line); border-radius: 18px; padding: .6em .4em; font-size: clamp(20px, 5.5vw, 32px); font-weight: 900; }
+.names button:disabled { opacity: .3; text-decoration: line-through; }
+.who { display: flex; align-items: center; gap: 10px; }
+.who .nm { font-weight: 900; font-size: 20px; flex: 1; }
+.prog { display: flex; gap: 6px; flex-wrap: wrap; }
+.prog span { width: 26px; height: 26px; border-radius: 50%; background: #dfe5e3; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--muted); }
+.prog span.ok { background: var(--ok); color: #fff; }
+.prog span.bad { background: var(--bad); color: #fff; }
+.prog span.sent { background: var(--blue); color: #fff; }
+.prog span.cur { outline: 3px solid var(--mango); }
+.q { display: flex; flex-direction: column; gap: 12px; }
+.q img { width: 100%; max-height: 38vh; object-fit: contain; background: #fff; border-radius: 16px; }
+.qtext { display: flex; gap: 10px; align-items: flex-start; font-family: var(--display); font-size: clamp(22px, 6vw, 36px); line-height: 1.35; }
+.say { flex: none; width: 1.6em; height: 1.6em; border-radius: 50%; border: 0; background: var(--blue); color: #fff; font-size: .8em; }
+.choices { display: flex; flex-direction: column; gap: 10px; }
+.choice { display: flex; gap: 12px; align-items: center; text-align: left; background: var(--card); border: 4px solid var(--line); border-radius: 18px; padding: .55em .7em; font-size: clamp(20px, 5.5vw, 30px); font-weight: 700; }
+.choice .k { flex: none; width: 1.6em; height: 1.6em; border-radius: 50%; display: grid; place-items: center; background: var(--paper); font-weight: 900; }
+.choice:disabled { opacity: .45; }
+.choice.mine { opacity: 1; border-color: var(--blue); background: #e6edf9; }
+.choice.mine.ok { border-color: var(--ok); background: #dff1e6; }
+.choice.mine.bad { border-color: var(--bad); background: #fde3dd; }
+.result { font-family: var(--display); font-size: clamp(24px, 7vw, 40px); text-align: center; min-height: 1.4em; }
+.result.ok { color: var(--ok); } .result.bad { color: var(--bad); } .result.sent { color: var(--blue); }
+.nav { display: flex; gap: 10px; justify-content: space-between; }
+.gem { width: 120px; }
+</style>
+</head>
+<body>
+<header>
+  <h1><span id="gem"></span>寶石鑑定室</h1>
+  <span class="status" id="net">連線中…</span>
+</header>
+<main id="main"><div class="center"><div class="big">連線中…</div></div></main>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="common.js"></script>
+<script>
+$("#gem").innerHTML = GEM;
+const main = $("#main");
+const room = (QS.get("r") || "").replace(/[^a-z0-9]/g, "");
+// 這支手機的代碼：記在手機裡，重新整理或斷線後老師端仍認得是同一個人
+let device = load("siraya-quiz-device", "");
+if (!device) { device = rid(12); store("siraya-quiz-device", device); }
+const st = { conn: null, phase: "", name: null, roster: [], questions: null, answered: {}, feedback: true, cur: 0, pending: null };
+
+function netStatus(text, cls = "") { const n = $("#net"); n.textContent = text; n.className = "status " + cls; }
+let peer, timer;
+function connect() {
+  clearTimeout(timer);
+  if (!room) { show(`<div class="center"><div class="big">請掃老師電視上的 QR code</div></div>`); return; }
+  if (!peer || peer.destroyed) {
+    peer = new Peer(peerOptions());
+    peer.on("open", openConn);
+    peer.on("error", e => { netStatus("連不上，重試中…", "bad"); if (e.type === "peer-unavailable") show(`<div class="center"><div class="big">找不到老師的電視</div><p class="muted">請確認電視上的答題頁面還開著，會自動重試。</p></div>`); retryLater(); });
+    peer.on("disconnected", () => { try { peer.reconnect(); } catch (e) {} });
+  } else if (peer.open) openConn();
+}
+function retryLater() { clearTimeout(timer); timer = setTimeout(connect, 3000); }
+function openConn() {
+  const c = peer.connect("siraya-quiz-" + room, { reliable: true });
+  st.conn = c;
+  c.on("open", () => { netStatus("已連線", "ok"); c.send({ t: "hello", device }); });
+  c.on("data", onMessage);
+  c.on("close", () => { if (st.conn === c) { netStatus("斷線了，重新連線中…", "bad"); retryLater(); } });
+  c.on("error", () => retryLater());
+}
+function send(m) { try { st.conn && st.conn.open && st.conn.send({ ...m, device }); } catch (e) {} }
+
+function onMessage(m) {
+  if (!m || typeof m !== "object") return;
+  if (m.t === "roster") { st.name = null; st.roster = m.roster; st.phase = m.phase; showRoster(); }
+  else if (m.t === "taken") { st.roster = m.roster; showRoster("這個名字已經有人選了，請選自己的名字。"); }
+  else if (m.t === "joined") {
+    const firstTime = st.name !== m.name || !st.questions && m.questions;
+    st.name = m.name; st.phase = m.phase; st.feedback = m.feedback; st.answered = m.answered || {};
+    if (m.questions) st.questions = m.questions;
+    if (firstTime) st.cur = firstOpen();
+    showQuiz();
+  } else if (m.t === "phase") { st.phase = m.phase; showQuiz(); }
+  else if (m.t === "answered") {
+    st.answered[m.qid] = { choice: m.choice, correct: m.correct }; st.pending = null;
+    showQuiz(true);
+    if (st.feedback && m.correct != null) speak(m.correct ? "答對了" : "答錯了，沒關係");
+    // 自動跳到下一題沒答的
+    setTimeout(() => { const n = firstOpen(); if (n !== st.cur && st.phase === "open") { st.cur = n; showQuiz(); } }, 1600);
+  }
+}
+const firstOpen = () => { const qs = st.questions || []; const i = qs.findIndex(q => !(q.id in st.answered)); return i < 0 ? qs.length : i; };
+
+function show(html) { main.innerHTML = html; }
+function showRoster(msg = "") {
+  main.innerHTML = "";
+  main.append(el("div", "big", "你是誰？請點自己的名字"));
+  if (msg) main.append(el("p", "err status bad", msg));
+  const g = el("div", "names");
+  for (const r of st.roster) {
+    const b = el("button", "", esc(r.name)); b.disabled = r.taken;
+    b.onclick = () => {
+      if (b.dataset.sure) { send({ t: "claim", name: r.name }); return; }
+      g.querySelectorAll("button").forEach(x => { delete x.dataset.sure; x.textContent = x.dataset.n; });
+      b.dataset.sure = 1; b.textContent = "我是 " + r.name + "？再點一次";
+    };
+    b.dataset.n = r.name; g.append(b);
+  }
+  main.append(g);
+}
+function header() {
+  const w = el("div", "who", `<span class="nm">${esc(st.name)}</span>`);
+  return w;
+}
+function showQuiz(justAnswered = false) {
+  if (!st.name) return;
+  main.innerHTML = ""; main.append(header());
+  if (st.phase === "lobby" || st.phase === "setup" || !st.questions) {
+    main.append(el("div", "center", `<div class="gem">${GEM}</div><div class="big">等老師開始</div><p class="muted">老師按「開始作答」後，題目會自己出現。</p>`)); return;
+  }
+  const qs = st.questions, all = qs.length, done = Object.keys(st.answered).length;
+  const prog = el("div", "prog");
+  qs.forEach((q, i) => {
+    const a = st.answered[q.id];
+    const s = el("span", a ? (a.correct == null ? "sent" : a.correct ? "ok" : "bad") : "", i + 1);
+    if (i === st.cur) s.classList.add("cur");
+    prog.append(s);
+  });
+  main.append(prog);
+  if (st.cur >= all) {
+    const ok = Object.values(st.answered).filter(a => a.correct).length;
+    main.append(el("div", "center", `<div class="gem">${GEM}</div><div class="big">全部答完了！</div>${st.feedback ? `<p class="big" style="font-size:28px">答對 ${ok} / ${all} 題</p>` : ""}<p class="muted">請看電視，等老師公布分數。</p>`));
+    if (done < all) { const b = el("button", "btn ghost", "回去看題目"); b.onclick = () => { st.cur = 0; showQuiz(); }; main.append(b); }
+    return;
+  }
+  const q = qs[st.cur], a = st.answered[q.id], closed = st.phase !== "open";
+  const box = el("div", "q");
+  if (q.img) box.append(Object.assign(document.createElement("img"), { src: q.img, alt: "" }));
+  const qt = el("div", "qtext", `<button class="say" aria-label="唸題目">▶</button><span>${st.cur + 1}. ${esc(q.text)}</span>`);
+  qt.querySelector(".say").onclick = () => speak(q.text + "。" + q.opts.map((o, i) => "ABCD"[i] + "，" + o).join("。"));
+  box.append(qt);
+  const ch = el("div", "choices");
+  q.opts.forEach((o, i) => {
+    const b = el("button", "choice", `<span class="k">${"ABCD"[i]}</span><span>${esc(o)}</span>`);
+    if (a) { b.disabled = true; if (a.choice === i) b.classList.add("mine", a.correct == null ? "sent" : a.correct ? "ok" : "bad"); }
+    else if (closed || st.pending) b.disabled = true;
+    b.onclick = () => {
+      if (a || closed || st.pending) return;
+      if (b.dataset.sure) { st.pending = q.id; send({ t: "answer", qid: q.id, choice: i }); ch.querySelectorAll("button").forEach(x => x.disabled = true); b.classList.add("mine"); return; }
+      ch.querySelectorAll(".choice").forEach(x => { delete x.dataset.sure; x.style.borderColor = ""; });
+      b.dataset.sure = 1; b.style.borderColor = "var(--mango)";
+      res.className = "result sent"; res.textContent = "確定選這個？再點一次";
+    };
+    ch.append(b);
+  });
+  box.append(ch);
+  const res = el("div", "result");
+  if (a) { res.className = "result " + (a.correct == null ? "sent" : a.correct ? "ok" : "bad"); res.textContent = a.correct == null ? "已送出" : a.correct ? "答對了！" : "答錯了，沒關係"; }
+  else if (closed) { res.className = "result bad"; res.textContent = "老師已經結束作答"; }
+  box.append(res);
+  main.append(box);
+  const nav = el("div", "nav");
+  const prev = el("button", "btn ghost", "上一題"); prev.disabled = st.cur === 0; prev.onclick = () => { st.cur--; showQuiz(); };
+  const next = el("button", "btn ghost", st.cur === all - 1 ? "完成" : "下一題"); next.onclick = () => { st.cur++; showQuiz(); };
+  nav.append(prev, next); main.append(nav);
+}
+connect();
+</script>
+</body>
+</html>

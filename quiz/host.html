@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QR 答題｜寶石鑑定室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="quiz.css">
+<style>
+/* 電視端：設定（名單＋出題）→ 教室（QR code＋學生狀態）→ 分數 */
+body { display: flex; flex-direction: column; }
+main { flex: 1; min-height: 0; padding-block: clamp(12px, 2vh, 28px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.view { display: flex; flex-direction: column; gap: clamp(12px, 2vh, 24px); height: 100%; }
+.bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.bar .grow { flex: 1; }
+
+/* 設定 */
+.setup { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: clamp(12px, 2vw, 28px); align-items: start; }
+.setup textarea { width: 100%; min-height: 40vh; font: inherit; font-size: clamp(16px, 1.3vw, 24px); line-height: 1.6; border: 3px solid var(--line); border-radius: 14px; padding: .5em .7em; resize: vertical; }
+.setup h2 { margin-bottom: .4em; }
+.qlist { display: flex; flex-direction: column; gap: 14px; }
+.qed { border: 3px solid var(--line); border-radius: 18px; padding: 14px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px 14px; align-items: start; background: var(--card); }
+.qed .no { font-family: var(--display); font-size: clamp(22px, 2vw, 36px); color: var(--band); min-width: 1.6em; }
+.qed .body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.qed input[type=text], .qed textarea { font: inherit; font-size: clamp(16px, 1.2vw, 22px); border: 2px solid var(--line); border-radius: 10px; padding: .35em .6em; width: 100%; }
+.qed textarea { min-height: 2.6em; resize: vertical; }
+.qed .opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.qed .opt { display: flex; align-items: center; gap: 6px; }
+.qed .opt label { display: flex; align-items: center; gap: 4px; font-size: clamp(13px, 1vw, 18px); white-space: nowrap; color: var(--muted); }
+.qed .opt input[type=radio] { width: 1.3em; height: 1.3em; accent-color: var(--ok); }
+.qed .img { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.qed .img img { height: 80px; border-radius: 10px; }
+.qed .side { display: flex; flex-direction: column; gap: 6px; }
+.small { font-size: clamp(13px, 1vw, 18px); padding: .3em .8em; border-radius: 999px; border: 2px solid var(--line); background: var(--card); font-weight: 700; }
+.small.danger { color: var(--bad); border-color: #f1b8ae; }
+.check { display: flex; align-items: center; gap: 8px; font-size: clamp(15px, 1.2vw, 22px); font-weight: 700; }
+.check input { width: 1.3em; height: 1.3em; accent-color: var(--band); }
+.err { color: var(--bad); font-weight: 700; }
+
+/* 教室 */
+.room { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: clamp(14px, 2.4vw, 40px); }
+.qrbox { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
+.qrbox .qr { width: min(100%, 52vh); aspect-ratio: 1; background: #fff; border-radius: 18px; padding: 10px; }
+.qrbox .qr svg { width: 100%; height: 100%; display: block; }
+.qrbox .url { font-size: clamp(12px, 1vw, 18px); word-break: break-all; color: var(--muted); }
+.phase { font-family: var(--display); font-size: clamp(24px, 2.6vw, 50px); }
+.people { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: 10px; align-content: start; overflow: auto; }
+.person { border-radius: 16px; padding: .5em .7em; background: #e3e8e6; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+.person .nm { font-size: clamp(18px, 1.6vw, 30px); font-weight: 900; }
+.person .st { font-size: clamp(13px, 1vw, 18px); }
+.person.in { background: #e6edf9; color: var(--blue); }
+.person.done { background: #dff1e6; color: var(--ok); }
+.person .kick { align-self: flex-start; margin-top: 4px; }
+
+/* 分數 */
+.scores { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 14px; align-content: start; }
+.sc { background: var(--card); border-radius: 20px; padding: 14px 18px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 14px; align-items: center; box-shadow: 0 5px 0 rgba(31,74,62,.12); }
+.sc .rank { font-family: var(--display); font-size: clamp(22px, 2vw, 40px); color: var(--muted); min-width: 1.4em; text-align: center; }
+.sc .nm { font-size: clamp(22px, 2.2vw, 44px); font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc .pt { font-family: var(--display); font-size: clamp(26px, 2.6vw, 52px); color: var(--band); font-variant-numeric: tabular-nums; }
+.sc .meter { grid-column: 1 / -1; height: 14px; background: #e3e8e6; border-radius: 999px; overflow: hidden; }
+.sc .meter span { display: block; height: 100%; background: var(--mango); border-radius: 999px; transition: width .8s; }
+.sc.absent { opacity: .45; }
+.rates { display: flex; flex-direction: column; gap: 8px; overflow: auto; flex: 1; min-height: 0; }
+.rate { display: grid; grid-template-columns: 3em minmax(0, 1fr) 7em; gap: 12px; align-items: center; background: var(--card); border-radius: 14px; padding: 10px 14px; font-size: clamp(15px, 1.3vw, 24px); }
+.rate .meter { height: 14px; background: #e3e8e6; border-radius: 999px; overflow: hidden; grid-column: 2; }
+.rate .meter span { display: block; height: 100%; background: var(--ok); }
+.rate .t { grid-column: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rate .n { grid-row: 1 / span 2; grid-column: 3; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.rate .q { grid-row: 1 / span 2; font-family: var(--display); color: var(--band); }
+
+@media (orientation: portrait), (max-width: 800px) { .setup, .room { grid-template-columns: 1fr; } .qed .opts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1><span id="gem"></span>QR 答題｜寶石鑑定室</h1>
+  <span class="status" id="net">連線中…</span>
+  <a class="tbtn" href="../" style="text-decoration:none">回遊戲首頁</a>
+  <button class="tbtn" id="bFull">全螢幕</button>
+</header>
+<main id="main"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="common.js"></script>
+<script>
+$("#gem").innerHTML = GEM;
+const KEY = "siraya-quiz-host";
+// 整個電視端狀態都存在這台電腦，重新整理或關掉再開都能接續
+const S = Object.assign({
+  room: rid(6), roster: [], questions: [], feedback: true,
+  phase: "setup",          // setup → lobby → open → closed
+  claims: {},              // 姓名 → 手機裝置代碼
+  answers: {},             // 姓名 → { 題目代碼: 選項 }
+  view: "setup",
+}, load(KEY, {}));
+const save = () => { if (!store(KEY, S)) netStatus("照片太多，無法存檔，請刪掉幾張照片", "bad"); };
+const main = $("#main");
+const conns = new Map();   // 裝置代碼 → DataConnection
+
+// ---------- 連線 ----------
+let peer, retry = 0;
+function netStatus(text, cls = "") { const n = $("#net"); n.textContent = text; n.className = "status " + cls; }
+function startPeer() {
+  if (peer) try { peer.destroy(); } catch (e) {}
+  netStatus("連線中…");
+  peer = new Peer("siraya-quiz-" + S.room, peerOptions());
+  peer.on("open", () => { retry = 0; netStatus("可以掃碼了", "ok"); });
+  peer.on("connection", c => {
+    c.on("data", m => onMessage(c, m));
+    c.on("close", () => { for (const [d, x] of conns) if (x === c) conns.delete(d); render(); });
+  });
+  peer.on("disconnected", () => { netStatus("重新連線中…", "bad"); try { peer.reconnect(); } catch (e) {} });
+  peer.on("error", e => {
+    netStatus("重新連線中…", "bad");
+    // 剛重新整理時舊的房間代碼可能還沒釋放，稍等再試
+    if (["unavailable-id", "network", "server-error", "socket-error", "socket-closed"].includes(e.type)) setTimeout(startPeer, Math.min(15000, 2000 * ++retry));
+  });
+}
+const publicQs = () => S.questions.map(q => ({ id: q.id, text: q.text, img: q.img || "", opts: q.opts }));
+const rosterFor = device => S.roster.map(name => ({ name, taken: !!S.claims[name] && S.claims[name] !== device }));
+function send(c, m) { try { c.open && c.send(m); } catch (e) {} }
+function broadcast(make) { for (const [d, c] of conns) send(c, make(d)); }
+function nameOf(device) { return Object.keys(S.claims).find(n => S.claims[n] === device) || null; }
+function joinedMsg(name) {
+  return { t: "joined", name, phase: S.phase, feedback: S.feedback, questions: S.phase === "open" || S.phase === "closed" ? publicQs() : null,
+    answered: Object.fromEntries(Object.entries(S.answers[name] || {}).map(([qid, ch]) => [qid, { choice: ch, correct: S.feedback ? isRight(qid, ch) : null }])) };
+}
+function isRight(qid, ch) { const q = S.questions.find(x => x.id === qid); return !!q && q.ans === ch; }
+function onMessage(c, m) {
+  if (!m || typeof m !== "object" || typeof m.device !== "string") return;
+  const device = m.device.slice(0, 40);
+  conns.set(device, c);
+  if (m.t === "hello") {
+    const me = nameOf(device);
+    send(c, me ? joinedMsg(me) : { t: "roster", roster: rosterFor(device), phase: S.phase });
+  } else if (m.t === "claim") {
+    const name = String(m.name);
+    if (!S.roster.includes(name)) return send(c, { t: "roster", roster: rosterFor(device), phase: S.phase });
+    if (S.claims[name] && S.claims[name] !== device) return send(c, { t: "taken", roster: rosterFor(device) });
+    const old = nameOf(device); if (old && old !== name) delete S.claims[old];
+    S.claims[name] = device; save();
+    send(c, joinedMsg(name));
+    broadcast(d => nameOf(d) ? { t: "noop" } : { t: "roster", roster: rosterFor(d), phase: S.phase });
+    render();
+  } else if (m.t === "answer") {
+    const name = nameOf(device);
+    if (!name) return send(c, { t: "roster", roster: rosterFor(device), phase: S.phase });
+    if (S.phase !== "open") return send(c, { t: "phase", phase: S.phase });
+    const q = S.questions.find(x => x.id === m.qid); const ch = +m.choice;
+    if (!q || !(ch >= 0 && ch < q.opts.length)) return;
+    const mine = S.answers[name] || (S.answers[name] = {});
+    if (!(q.id in mine)) { mine[q.id] = ch; save(); render(); }   // 回答過就不能再改
+    send(c, { t: "answered", qid: q.id, choice: mine[q.id], correct: S.feedback ? isRight(q.id, mine[q.id]) : null });
+  }
+}
+function setPhase(p) {
+  S.phase = p; save();
+  broadcast(d => { const n = nameOf(d); return n ? joinedMsg(n) : { t: "roster", roster: rosterFor(d), phase: p }; });
+  render();
+}
+
+// ---------- 畫面 ----------
+function render() { ({ setup: viewSetup, room: viewRoom, scores: viewScores, rates: viewRates })[S.view](); }
+function go(v) { S.view = v; save(); render(); }
+const playUrl = () => { const u = new URL("play.html", location.href); u.search = "r=" + S.room + (passThrough() ? "&" + passThrough() : ""); return u.href; };
+const scoreOf = n => Object.entries(S.answers[n] || {}).filter(([q, c]) => isRight(q, c)).length;
+const doneOf = n => Object.keys(S.answers[n] || {}).filter(q => S.questions.some(x => x.id === q)).length;
+
+function viewSetup() {
+  main.innerHTML = "";
+  const v = el("div", "view");
+  const locked = S.phase !== "setup";
+  v.append(el("div", "bar", `<h2 class="grow">準備：名單與題目</h2>${locked ? '<span class="status bad">已有學生作答，修改題目會讓分數對不上</span>' : ""}`));
+  const g = el("div", "setup");
+  const left = el("div", "card", `<h2>學生名單</h2><p class="muted">一行一位，例如「1 王小明」。學生掃碼後點自己的名字。</p>`);
+  const ta = el("textarea"); ta.id = "roster"; ta.value = S.roster.join("\n"); ta.placeholder = "1 王小明\n2 李小華";
+  ta.oninput = () => { S.roster = [...new Set(ta.value.split("\n").map(s => s.trim()).filter(Boolean))]; save(); };
+  left.append(ta);
+  const right = el("div", "card");
+  right.append(el("h2", "", "題目"));
+  const fb = el("label", "check", `<input type="checkbox" id="fb" ${S.feedback ? "checked" : ""}> 學生作答後馬上看到對或錯`);
+  fb.querySelector("input").onchange = e => { S.feedback = e.target.checked; save(); };
+  right.append(fb);
+  const list = el("div", "qlist");
+  S.questions.forEach((q, i) => list.append(qEditor(q, i)));
+  right.append(list);
+  const add = el("button", "btn alt", "＋ 新增題目");
+  add.onclick = () => { S.questions.push({ id: rid(5), text: "", img: "", opts: ["", "", "", ""], ans: 0 }); save(); render(); setTimeout(() => main.querySelectorAll(".qed textarea")[S.questions.length - 1]?.focus(), 0); };
+  right.append(el("div", "bar")); right.lastChild.append(add);
+  g.append(left, right); v.append(g);
+  const err = el("p", "err");
+  const start = el("button", "btn", locked ? "回到教室" : "完成，顯示 QR code");
+  start.onclick = () => {
+    for (const q of S.questions) q.opts = q.opts.map(s => s.trim());
+    const bad = S.questions.findIndex(q => !q.text.trim() || q.opts.filter(Boolean).length < 2 || !q.opts[q.ans]);
+    if (!S.roster.length) return err.textContent = "請先輸入學生名單。";
+    if (!S.questions.length) return err.textContent = "請至少新增一題。";
+    if (bad >= 0) return err.textContent = `第 ${bad + 1} 題還沒完成：要有題目、至少兩個選項，並勾選正確答案。`;
+    // 清掉空白選項，正確答案跟著移位
+    for (const q of S.questions) { const right = q.opts[q.ans]; q.opts = q.opts.filter(Boolean); q.ans = q.opts.indexOf(right); }
+    if (S.phase === "setup") S.phase = "lobby";
+    save(); go("room"); setPhase(S.phase);
+  };
+  const b = el("div", "bar"); b.append(start, err); v.append(b);
+  main.append(v);
+}
+function qEditor(q, i) {
+  const box = el("div", "qed");
+  box.append(el("div", "no", i + 1));
+  const body = el("div", "body");
+  const t = el("textarea"); t.value = q.text; t.placeholder = "題目，例如：這是遊客中心的哪一個設計？"; t.oninput = () => { q.text = t.value; save(); };
+  body.append(t);
+  const img = el("div", "img");
+  const drawImg = () => {
+    img.innerHTML = q.img ? `<img src="${q.img}" alt="">` : "";
+    const up = el("label", "small", `${q.img ? "換照片" : "＋ 加照片"}<input type="file" accept="image/*" hidden>`);
+    up.querySelector("input").onchange = async e => { const f = e.target.files[0]; if (f) { q.img = await shrink(f); save(); drawImg(); } };
+    img.append(up);
+    if (q.img) { const rm = el("button", "small danger", "刪除照片"); rm.onclick = () => { q.img = ""; save(); drawImg(); }; img.append(rm); }
+  };
+  drawImg(); body.append(img);
+  const opts = el("div", "opts");
+  for (let k = 0; k < 4; k++) {
+    const o = el("div", "opt");
+    const inp = el("input"); inp.type = "text"; inp.value = q.opts[k] || ""; inp.placeholder = `選項 ${"ABCD"[k]}`;
+    inp.oninput = () => { q.opts[k] = inp.value; save(); };
+    const lab = el("label", "", `<input type="radio" name="ans-${q.id}" ${q.ans === k ? "checked" : ""}> 正解`);
+    lab.querySelector("input").onchange = () => { q.ans = k; save(); };
+    o.append(inp, lab); opts.append(o);
+  }
+  while (q.opts.length < 4) q.opts.push("");
+  body.append(opts);
+  const side = el("div", "side");
+  const mk = (txt, fn, cls = "small") => { const b = el("button", cls, txt); b.onclick = fn; side.append(b); };
+  if (i > 0) mk("上移", () => { [S.questions[i - 1], S.questions[i]] = [S.questions[i], S.questions[i - 1]]; save(); render(); });
+  if (i < S.questions.length - 1) mk("下移", () => { [S.questions[i + 1], S.questions[i]] = [S.questions[i], S.questions[i + 1]]; save(); render(); });
+  const del = el("button", "small danger", "刪除");
+  del.onclick = () => { if (del.dataset.sure) { S.questions.splice(i, 1); save(); render(); } else { del.dataset.sure = 1; del.textContent = "確定刪除？"; } };
+  side.append(del);
+  box.append(body, side);
+  return box;
+}
+function shrink(file) {
+  return new Promise(res => {
+    const im = new Image(), url = URL.createObjectURL(file);
+    im.onload = () => { const k = Math.min(1, 800 / Math.max(im.width, im.height)); const c = document.createElement("canvas"); c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", .72)); };
+    im.onerror = () => res(""); im.src = url;
+  });
+}
+
+function viewRoom() {
+  main.innerHTML = "";
+  const v = el("div", "view");
+  const phaseText = { lobby: "請學生掃 QR code，點自己的名字", open: "作答中", closed: "作答已結束" }[S.phase] || "";
+  const top = el("div", "bar", `<div class="phase grow">${phaseText}</div>`);
+  const btn = (t, fn, cls = "btn") => { const b = el("button", cls, t); b.onclick = fn; top.append(b); return b; };
+  if (S.phase === "lobby") btn("開始作答", () => setPhase("open"));
+  if (S.phase === "open") btn("結束作答", () => setPhase("closed"), "btn alt");
+  if (S.phase === "closed") btn("重新開放作答", () => setPhase("open"), "btn ghost");
+  btn("顯示分數", () => go("scores"), S.phase === "closed" ? "btn" : "btn ghost");
+  btn("名單與題目", () => go("setup"), "btn ghost");
+  v.append(top);
+  const r = el("div", "room");
+  const qr = qrcode(0, "M"); qr.addData(playUrl()); qr.make();
+  r.append(el("div", "card qrbox", `<div class="qr">${qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true })}</div><div class="url">${esc(playUrl())}</div>`));
+  const right = el("div", "card view");
+  const joined = S.roster.filter(n => S.claims[n]).length, finished = S.roster.filter(n => doneOf(n) === S.questions.length).length;
+  right.append(el("div", "bar", `<h2 class="grow">學生</h2><span class="status">已加入 ${joined} / ${S.roster.length}</span><span class="status ok">完成 ${finished}</span>`));
+  const ppl = el("div", "people");
+  for (const n of S.roster) {
+    const d = doneOf(n), all = S.questions.length;
+    const cls = !S.claims[n] ? "" : d === all ? "done" : "in";
+    const st = !S.claims[n] ? "還沒加入" : d === all ? "全部答完" : `已答 ${d} / ${all}`;
+    const p = el("div", "person " + cls, `<span class="nm">${esc(n)}</span><span class="st">${st}</span>`);
+    if (S.claims[n]) {
+      // 學生選錯名字或換手機時，老師可以放開這個名字
+      const k = el("button", "small kick", "放開名字");
+      k.onclick = () => {
+        if (!k.dataset.sure) { k.dataset.sure = 1; k.textContent = "確定？答案會保留"; return; }
+        const dev = S.claims[n]; delete S.claims[n]; save();
+        const c = conns.get(dev); if (c) send(c, { t: "roster", roster: rosterFor(dev), phase: S.phase });
+        render();
+      };
+      p.append(k);
+    }
+    ppl.append(p);
+  }
+  right.append(ppl); r.append(right); v.append(r);
+  main.append(v);
+}
+function viewScores() {
+  main.innerHTML = "";
+  const v = el("div", "view");
+  const top = el("div", "bar", `<h2 class="grow">${GEM.replace("<svg", '<svg style="width:1.3em;height:1em;vertical-align:-.1em"')} 寶石鑑定成績</h2>`);
+  const btn = (t, fn, cls = "btn ghost") => { const b = el("button", cls, t); b.onclick = fn; top.append(b); return b; };
+  let byRank = S.sortRank !== false;
+  btn(byRank ? "依名單順序" : "依分數排序", () => { S.sortRank = !byRank; save(); render(); });
+  btn("每題答對率", () => go("rates"));
+  btn("回教室", () => go("room"));
+  const reset = btn("全部重新開始", () => {
+    if (!reset.dataset.sure) { reset.dataset.sure = 1; reset.textContent = "確定清除所有答案？"; return; }
+    S.answers = {}; S.claims = {}; S.phase = "lobby"; save(); setPhase("lobby"); go("room");
+  });
+  v.append(top);
+  const all = S.questions.length;
+  let rows = S.roster.map((n, i) => ({ n, i, s: scoreOf(n), joined: !!S.claims[n] || doneOf(n) > 0 }));
+  if (byRank) rows.sort((a, b) => b.s - a.s || a.i - b.i);
+  const box = el("div", "scores");
+  let rank = 0, last = -1;
+  rows.forEach((r, k) => {
+    if (r.s !== last) { rank = k + 1; last = r.s; }
+    const c = el("div", "sc" + (r.joined ? "" : " absent"), `<span class="rank">${byRank ? rank : r.i + 1}</span><span class="nm">${esc(r.n)}</span><span class="pt">${r.s}<small style="font-size:.5em;color:var(--muted)"> / ${all}</small></span><div class="meter"><span style="width:0%"></span></div>`);
+    box.append(c);
+    requestAnimationFrame(() => requestAnimationFrame(() => c.querySelector(".meter span").style.width = (all ? r.s / all * 100 : 0) + "%"));
+  });
+  v.append(box); main.append(v);
+}
+function viewRates() {
+  main.innerHTML = "";
+  const v = el("div", "view");
+  const top = el("div", "bar", `<h2 class="grow">每題答對率</h2>`);
+  const b = el("button", "btn ghost", "回分數"); b.onclick = () => go("scores"); top.append(b);
+  v.append(top);
+  const box = el("div", "rates");
+  S.questions.forEach((q, i) => {
+    const got = S.roster.filter(n => S.answers[n] && q.id in S.answers[n]);
+    const ok = got.filter(n => S.answers[n][q.id] === q.ans).length;
+    const pct = got.length ? Math.round(ok / got.length * 100) : 0;
+    box.append(el("div", "rate", `<span class="q">${i + 1}</span><span class="t">${esc(q.text)}　<b>答案：${esc(q.opts[q.ans])}</b></span><div class="meter"><span style="width:${pct}%"></span></div><span class="n">${ok} / ${got.length} 人</span>`));
+  });
+  v.append(box); main.append(v);
+}
+
+$("#bFull").onclick = async () => { try { document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen(); } catch (e) {} };
+startPeer();
+render();
+</script>
+</body>
+</html>

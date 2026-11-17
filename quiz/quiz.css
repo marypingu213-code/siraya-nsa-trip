@@ -1,0 +1,29 @@
+/* QR 答題：電視端與手機端共用樣式（沿用遊戲的配色與字型） */
+:root {
+  --paper: #eef1ef; --card: #ffffff; --ink: #1f2a2a; --muted: #5a6664; --line: #c5d0cd;
+  --band: #1f4a3e; --red: #e8452c; --blue: #2f5aa8; --mango: #f4b223; --ok: #2e8b57; --bad: #c0392b;
+  --display: "Huninn", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  --body: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); touch-action: manipulation; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 4px solid var(--mango); outline-offset: 3px; }
+[hidden] { display: none !important; }
+header { background: var(--card); border-bottom: 6px solid var(--band); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header h1 { font-family: var(--display); font-weight: 400; font-size: clamp(20px, 2vw, 38px); margin: 0; flex: 1; min-width: 0; display: flex; align-items: center; gap: .35em; }
+header h1 svg { width: 1.4em; height: 1.12em; flex: none; }
+.tbtn { color: var(--ink); text-decoration: none; background: var(--card); border: 2px solid var(--line); border-radius: 999px; padding: .3em .9em; font-size: clamp(14px, 1.1vw, 22px); font-weight: 700; white-space: nowrap; }
+.btn { background: var(--red); color: #fff; border: 0; border-radius: 999px; padding: .4em 1.3em; font-family: var(--display); font-size: clamp(18px, 1.8vw, 36px); box-shadow: 0 5px 0 rgba(0,0,0,.18); }
+.btn.alt { background: var(--blue); }
+.btn.ghost { background: var(--card); color: var(--ink); border: 3px solid var(--line); box-shadow: none; }
+.btn:disabled { opacity: .4; box-shadow: none; }
+.status { font-size: clamp(14px, 1.1vw, 20px); font-weight: 700; padding: .25em .8em; border-radius: 999px; background: #e3ebe8; white-space: nowrap; }
+.status.ok { background: #dff1e6; color: var(--ok); }
+.status.bad { background: #fde3dd; color: var(--bad); }
+.card { background: var(--card); border-radius: 22px; box-shadow: 0 5px 0 rgba(31,74,62,.12); padding: clamp(14px, 1.6vw, 28px); min-width: 0; }
+.muted { color: var(--muted); }
+h2 { font-family: var(--display); font-weight: 400; margin: 0; font-size: clamp(22px, 2.2vw, 42px); }
