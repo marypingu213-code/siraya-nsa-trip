@@ -70,6 +70,21 @@ main { flex: 1; min-height: 0; padding-block: clamp(12px, 2vh, 28px); padding-le
 .rate .n { grid-row: 1 / span 2; grid-column: 3; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
 .rate .q { grid-row: 1 / span 2; font-family: var(--display); color: var(--band); }
 
+/* 題庫選題 */
+.bank { position: fixed; inset: 0; z-index: 50; background: var(--paper); display: flex; flex-direction: column; gap: 14px; padding-block: calc(env(safe-area-inset-top, 0px) + 16px) calc(env(safe-area-inset-bottom, 0px) + 16px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.chip { background: var(--card); border: 3px solid var(--line); border-radius: 999px; padding: .3em .9em; font-size: clamp(15px, 1.2vw, 22px); font-weight: 700; }
+.chip[aria-pressed="true"] { border-color: var(--band); background: var(--band); color: #fff; }
+.bgrid { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; align-content: start; }
+.bitem { position: relative; background: var(--card); border: 4px solid transparent; border-radius: 18px; padding: 8px; display: flex; flex-direction: column; gap: 6px; text-align: left; box-shadow: 0 4px 0 rgba(31,74,62,.1); }
+.bitem img, .bitem .noimg { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; background: var(--paper); }
+.bitem .noimg { display: grid; place-items: center; color: var(--muted); font-weight: 700; }
+.bitem .t { font-size: clamp(15px, 1.15vw, 21px); font-weight: 700; line-height: 1.35; }
+.bitem .a { font-size: clamp(13px, 1vw, 17px); color: var(--ok); }
+.bitem .tag { position: absolute; top: 14px; left: 14px; background: var(--band); color: #fff; border-radius: 999px; padding: .1em .7em; font-size: 14px; font-weight: 700; }
+.bitem[aria-pressed="true"] { border-color: var(--red); background: #fdeae6; }
+.bitem[aria-pressed="true"]::after { content: "✓"; position: absolute; top: 12px; right: 12px; width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--red); color: #fff; display: grid; place-items: center; font-weight: 900; }
+.bitem:disabled { opacity: .45; }
+.qed .img img { max-width: 160px; object-fit: cover; }
 @media (orientation: portrait), (max-width: 800px) { .setup, .room { grid-template-columns: 1fr; } .qed .opts { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -85,6 +100,7 @@ main { flex: 1; min-height: 0; padding-block: clamp(12px, 2vh, 28px); padding-le
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="common.js"></script>
+<script src="bank-data.js"></script>
 <script>
 $("#gem").innerHTML = GEM;
 const KEY = "siraya-quiz-host";
@@ -162,6 +178,63 @@ function setPhase(p) {
   render();
 }
 
+// ---------- 遊戲題庫（資料來自遊戲本身，見 bank-data.js） ----------
+const pickN = (arr, n) => shuffle(arr).slice(0, n);
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const pic = p => p ? "../" + p : "";
+// 選項打亂順序，回傳 { opts, ans }
+const mix = (right, wrong) => { const opts = shuffle([right, ...wrong]); return { opts, ans: opts.indexOf(right) }; };
+function bankSets() {
+  const G = window.GAME; if (!G) return [];
+  const rname = k => G.ROUTES.find(r => r.k === k).nm;
+  return [
+    { k: "route", nm: "三大主軸", items: G.SPOTS.map(x => ({ key: "route:" + x.nm, text: `「${x.nm}」屬於哪一條路線？`, img: pic(x.img), make: () => mix(rname(x.r), G.ROUTES.filter(r => r.k !== x.r).map(r => r.nm)) , ans: rname(x.r) })) },
+    { k: "clue", nm: "聽線索猜景點", items: G.SPOTS.filter(x => x.clue).map(x => ({ key: "clue:" + x.nm, text: `線索：${x.clue}。這是哪一個景點？`, img: "", make: () => mix(x.nm, pickN(G.SPOTS.filter(y => y !== x).map(y => y.nm), 3)), ans: x.nm })) },
+    { k: "secret", nm: "建築師的祕密", items: G.SECRETS.map(x => ({ key: "secret:" + x.a, text: `「${x.a}」，建築師為什麼這樣設計？`, img: pic(x.img), make: () => mix(x.b, pickN(G.SECRETS.filter(y => y !== x).map(y => y.b), 2)), ans: x.b })) },
+    { k: "tabe", nm: "Tabe! Tabe!", items: [...G.TABE.animal, ...G.TABE.element, ...G.TABE.more].map(x => ({ key: "tabe:" + x.img + x.q, text: x.q, img: pic(x.img), make: () => mix(x.ans, pickN(x.opts.filter(o => o !== x.ans), 3)), ans: x.ans })) },
+    { k: "plant", nm: "認識植物", items: G.PLANTS.map(x => ({ key: "plant:" + x.nm, text: `這是哪一種植物的${x.part}？`, img: pic(x.img), make: () => mix(x.nm, pickN(G.PLANTS.filter(y => y !== x).map(y => y.nm), 3)), ans: x.nm })) },
+  ];
+}
+function openBank() {
+  const sets = bankSets(); if (!sets.length) return;
+  const have = new Set(S.questions.map(q => q.bank).filter(Boolean));
+  const chosen = new Set();
+  let cur = sets[0].k;
+  const ov = el("div", "bank"); document.body.append(ov);
+  const draw = () => {
+    const set = sets.find(x => x.k === cur);
+    ov.innerHTML = "";
+    const top = el("div", "bar", `<h2 class="grow">從遊戲題庫選題</h2>`);
+    const cancel = el("button", "btn ghost", "取消"); cancel.onclick = () => ov.remove();
+    const ok = el("button", "btn", `加入 ${chosen.size} 題`); ok.disabled = !chosen.size;
+    ok.onclick = () => {
+      for (const s2 of sets) for (const it of s2.items) if (chosen.has(it.key)) { const m = it.make(); S.questions.push({ id: rid(5), bank: it.key, text: it.text, img: it.img, opts: m.opts, ans: m.ans }); }
+      save(); ov.remove(); render();
+    };
+    top.append(cancel, ok); ov.append(top);
+    const tabs = el("div", "bar");
+    for (const s2 of sets) {
+      const n = s2.items.filter(it => chosen.has(it.key)).length;
+      const t = el("button", "chip", `${s2.nm}（${s2.items.length}）${n ? ` ✓${n}` : ""}`); t.setAttribute("aria-pressed", s2.k === cur);
+      t.onclick = () => { cur = s2.k; draw(); }; tabs.append(t);
+    }
+    const free = set.items.filter(it => !have.has(it.key));
+    const all = el("button", "small", free.every(it => chosen.has(it.key)) && free.length ? "取消全選" : "這一類全選");
+    all.onclick = () => { const on = free.every(it => chosen.has(it.key)); free.forEach(it => on ? chosen.delete(it.key) : chosen.add(it.key)); draw(); };
+    tabs.append(all); ov.append(tabs);
+    const grid = el("div", "bgrid");
+    for (const it of set.items) {
+      const done = have.has(it.key);
+      const b = el("button", "bitem", `${it.img ? `<img src="${esc(it.img)}" alt="" loading="lazy">` : '<span class="noimg">文字題</span>'}<span class="t">${esc(it.text)}</span><span class="a">答案：${esc(it.ans)}</span>${done ? '<span class="tag">已加入</span>' : ""}`);
+      b.disabled = done; b.setAttribute("aria-pressed", chosen.has(it.key));
+      b.onclick = () => { chosen.has(it.key) ? chosen.delete(it.key) : chosen.add(it.key); draw(); };
+      grid.append(b);
+    }
+    ov.append(grid);
+  };
+  draw();
+}
+
 // ---------- 畫面 ----------
 function render() { ({ setup: viewSetup, room: viewRoom, scores: viewScores, rates: viewRates })[S.view](); }
 function go(v) { S.view = v; save(); render(); }
@@ -189,7 +262,8 @@ function viewSetup() {
   right.append(list);
   const add = el("button", "btn alt", "＋ 新增題目");
   add.onclick = () => { S.questions.push({ id: rid(5), text: "", img: "", opts: ["", "", "", ""], ans: 0 }); save(); render(); setTimeout(() => main.querySelectorAll(".qed textarea")[S.questions.length - 1]?.focus(), 0); };
-  right.append(el("div", "bar")); right.lastChild.append(add);
+  const pick = el("button", "btn", "從遊戲題庫選題"); pick.onclick = openBank;
+  right.append(el("div", "bar")); right.lastChild.append(pick, add);
   g.append(left, right); v.append(g);
   const err = el("p", "err");
   const start = el("button", "btn", locked ? "回到教室" : "完成，顯示 QR code");
@@ -204,7 +278,7 @@ function viewSetup() {
     if (S.phase === "setup") S.phase = "lobby";
     save(); go("room"); setPhase(S.phase);
   };
-  const b = el("div", "bar"); b.append(start, err); v.append(b);
+  v.append(err); const b = el("div", "bar"); b.append(start); v.append(b);
   main.append(v);
 }
 function qEditor(q, i) {

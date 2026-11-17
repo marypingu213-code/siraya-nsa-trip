@@ -42,3 +42,26 @@ html = page(body)
 out = os.path.join(root, "download", "寶石鑑定室_官田遊客中心.html")
 open(out, "w", encoding="utf-8").write(html)
 print(len(cache), "images,", round(os.path.getsize(out) / 1e6, 1), "MB")
+
+
+# ---- QR 答題題庫：從遊戲原始碼抽出題目資料，寫成 quiz/bank-data.js ----
+def js_statement(code, name):
+    """回傳 `const NAME = ...;` 整句（略過字串內容計算括號）"""
+    i = code.index("const " + name + " =")
+    depth, k, q = 0, i, None
+    while k < len(code):
+        ch = code[k]
+        if q:
+            if ch == "\\": k += 1
+            elif ch == q: q = None
+        elif ch in "\"'`": q = ch
+        elif ch in "([{": depth += 1
+        elif ch in ")]}": depth -= 1
+        elif ch == ";" and depth == 0: return code[i:k + 1]
+        k += 1
+    raise ValueError(name)
+names = ["ROUTES", "SPOTS", "SECRETS", "ANIMALS", "ELEMENTS", "TABE", "PLANTS"]
+bank = "// 由 build.py 自動產生，請勿手動修改\n(() => {\n" + "\n".join(js_statement(site_src, n) for n in names) + \
+       "\nwindow.GAME = { " + ", ".join(names) + " };\n})();\n"
+open(os.path.join(root, "quiz", "bank-data.js"), "w", encoding="utf-8").write(bank)
+print("quiz bank written")
