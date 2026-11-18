@@ -57,7 +57,7 @@ const room = (QS.get("r") || "").replace(/[^a-z0-9]/g, "");
 // 這支手機的代碼：記在手機裡，重新整理或斷線後老師端仍認得是同一個人
 let device = load("siraya-quiz-device", "");
 if (!device) { device = rid(12); store("siraya-quiz-device", device); }
-const st = { conn: null, phase: "", name: null, roster: [], questions: null, answered: {}, feedback: true, cur: 0, pending: null };
+const st = { conn: null, phase: "", name: null, roster: [], questions: null, answered: {}, feedback: true, cur: 0, pending: null, mode: "", live: null };
 
 function netStatus(text, cls = "") { const n = $("#net"); n.textContent = text; n.className = "status " + cls; }
 let peer, timer;
@@ -86,13 +86,21 @@ function onMessage(m) {
   if (!m || typeof m !== "object") return;
   if (m.t === "roster") { st.name = null; st.roster = m.roster; st.phase = m.phase; showRoster(); }
   else if (m.t === "taken") { st.roster = m.roster; showRoster("這個名字已經有人選了，請選自己的名字。"); }
+  else if (m.t === "joined" && m.mode === "live") {
+    const prev = st.live;
+    st.name = m.name; st.phase = m.phase; st.mode = "live"; st.live = m.live; st.pending = null;
+    showLive();
+    const L = m.live;
+    if (L && L.reveal && !(prev && prev.reveal && prev.q.id === L.q.id)) speak(L.mine == null ? "答案公布了" : L.mine === L.ans ? "答對了" : "答錯了，沒關係");
+    else if (L && !L.reveal && (!prev || prev.q.id !== L.q.id)) speak(L.q.text);
+  }
   else if (m.t === "joined") {
     const firstTime = st.name !== m.name || !st.questions && m.questions;
     st.name = m.name; st.phase = m.phase; st.feedback = m.feedback; st.answered = m.answered || {};
     if (m.questions) st.questions = m.questions;
     if (firstTime) st.cur = firstOpen();
     showQuiz();
-  } else if (m.t === "phase") { st.phase = m.phase; showQuiz(); }
+  } else if (m.t === "phase") { st.phase = m.phase; st.mode === "live" ? showLive() : showQuiz(); }
   else if (m.t === "answered") {
     st.answered[m.qid] = { choice: m.choice, correct: m.correct }; st.pending = null;
     showQuiz(true);
@@ -119,6 +127,43 @@ function showRoster(msg = "") {
     b.dataset.n = r.name; g.append(b);
   }
   main.append(g);
+}
+// 老師帶題：只顯示老師目前出的這一題
+function showLive() {
+  main.innerHTML = ""; main.append(header());
+  const L = st.live;
+  if (!L || st.phase === "lobby" || st.phase === "setup") {
+    main.append(el("div", "center", `<div class="gem">${GEM}</div><div class="big">等老師出題</div><p class="muted">題目出現後，看大螢幕，在手機上選答案。</p>`)); return;
+  }
+  const q = L.q, mine = L.mine, rv = L.reveal;
+  main.append(el("div", "muted", `第 ${L.idx + 1} 題，共 ${L.total} 題`));
+  const box = el("div", "q");
+  if (q.img) box.append(Object.assign(document.createElement("img"), { src: q.img, alt: "" }));
+  const qt = el("div", "qtext", `<button class="say" aria-label="唸題目">▶</button><span>${esc(q.text)}</span>`);
+  qt.querySelector(".say").onclick = () => speak(q.text + "。" + q.opts.map((o, i) => "ABCD"[i] + "，" + o).join("。"));
+  box.append(qt);
+  const ch = el("div", "choices");
+  const res = el("div", "result");
+  q.opts.forEach((o, i) => {
+    const b = el("button", "choice", `<span class="k">${"ABCD"[i]}</span><span>${esc(o)}</span>`);
+    const locked = mine != null || rv || st.phase !== "open" || st.pending;
+    b.disabled = !!locked;
+    if (rv && i === L.ans) b.classList.add("mine", "ok");
+    if (mine === i) b.classList.add("mine", rv ? (i === L.ans ? "ok" : "bad") : "sent");
+    b.onclick = () => {
+      if (locked) return;
+      if (b.dataset.sure) { st.pending = q.id; send({ t: "answer", qid: q.id, choice: i }); ch.querySelectorAll("button").forEach(x => x.disabled = true); b.classList.add("mine"); res.className = "result sent"; res.textContent = "送出中…"; return; }
+      ch.querySelectorAll(".choice").forEach(x => { delete x.dataset.sure; x.style.borderColor = ""; });
+      b.dataset.sure = 1; b.style.borderColor = "var(--mango)";
+      res.className = "result sent"; res.textContent = "確定選這個？再點一次";
+    };
+    ch.append(b);
+  });
+  box.append(ch);
+  if (rv) { res.className = "result " + (mine == null ? "" : mine === L.ans ? "ok" : "bad"); res.textContent = mine == null ? `答案是 ${"ABCD"[L.ans]}` : mine === L.ans ? "答對了！" : `答錯了，答案是 ${"ABCD"[L.ans]}`; }
+  else if (mine != null) { res.className = "result sent"; res.textContent = "已送出！請看大螢幕"; }
+  box.append(res);
+  main.append(box);
 }
 function header() {
   const w = el("div", "who", `<span class="nm">${esc(st.name)}</span>`);

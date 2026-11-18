@@ -27,3 +27,6 @@ header h1 svg { width: 1.4em; height: 1.12em; flex: none; }
 .card { background: var(--card); border-radius: 22px; box-shadow: 0 5px 0 rgba(31,74,62,.12); padding: clamp(14px, 1.6vw, 28px); min-width: 0; }
 .muted { color: var(--muted); }
 h2 { font-family: var(--display); font-weight: 400; margin: 0; font-size: clamp(22px, 2.2vw, 42px); }
+/* 依剩下空間等比縮放的照片框：--r 為寬／高 */
+.fitbox { container-type: size; min-width: 0; min-height: 0; display: grid; place-items: center; }
+.fitted { width: min(100cqw, calc(100cqh * (var(--r)))); aspect-ratio: var(--r); }

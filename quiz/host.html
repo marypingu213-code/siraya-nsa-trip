@@ -53,6 +53,44 @@ main { flex: 1; min-height: 0; padding-block: clamp(12px, 2vh, 28px); padding-le
 .person.done { background: #dff1e6; color: var(--ok); }
 .person .kick { align-self: flex-start; margin-top: 4px; }
 
+/* 作答方式 */
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-block: 8px 12px; }
+.mode { background: var(--card); border: 4px solid var(--line); border-radius: 16px; padding: .5em .8em; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.mode b { font-size: clamp(17px, 1.4vw, 26px); }
+.mode span { font-size: clamp(13px, 1vw, 18px); color: var(--muted); line-height: 1.4; }
+.mode[aria-pressed="true"] { border-color: var(--red); background: #fdeae6; }
+
+/* 老師帶題 */
+.nums { display: flex; gap: 6px; flex-wrap: wrap; }
+.num { width: 2.2em; height: 2.2em; border-radius: 50%; border: 3px solid var(--line); background: var(--card); font-weight: 900; font-size: clamp(14px, 1.1vw, 20px); }
+.num.done { background: #dff1e6; border-color: var(--ok); color: var(--ok); }
+.num.cur { background: var(--band); border-color: var(--band); color: #fff; }
+.live { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: clamp(14px, 2vw, 32px); }
+.lq { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.lpic { flex: 1 1 0; min-height: 120px; }
+.lpic img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; display: block; }
+.ltext { display: flex; gap: .4em; align-items: flex-start; font-family: var(--display); font-size: clamp(24px, 2.6vw, 52px); line-height: 1.3; }
+.say { flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; border: 0; background: var(--blue); color: #fff; font-size: .7em; margin-top: .15em; }
+.lopts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lopt { position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; background: var(--card); border: 4px solid var(--line); border-radius: 18px; padding: .45em .7em; font-size: clamp(20px, 2vw, 40px); font-weight: 700; }
+.lopt > * { position: relative; z-index: 1; }
+.lopt .k { flex: none; width: 1.6em; height: 1.6em; border-radius: 50%; display: grid; place-items: center; background: var(--paper); font-weight: 900; }
+.lopt .t { flex: 1; min-width: 0; }
+.lopt .n { font-variant-numeric: tabular-nums; font-size: .8em; }
+.lopt .fill { position: absolute; z-index: 0; left: 0; top: 0; bottom: 0; background: rgba(47,90,168,.14); transition: width .8s; }
+.lopt.right { border-color: var(--ok); background: #dff1e6; }
+.lopt.right .k { background: var(--ok); color: #fff; }
+.lopt.right .fill { background: rgba(46,139,87,.22); }
+.lopt.wrong { opacity: .6; }
+.lppl { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.lppl .people { flex: 1; min-height: 0; }
+.person.bad { background: #fde3dd; color: var(--bad); }
+.lppl .people { grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+.lppl .person { padding: .6em .8em; }
+.lppl .person .nm { font-size: clamp(20px, 2vw, 40px); }
+.lppl .person .st { font-size: clamp(15px, 1.3vw, 26px); font-weight: 700; }
+.lctrl .btn { min-width: 6em; }
+
 /* 分數 */
 .scores { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 14px; align-content: start; }
 .sc { background: var(--card); border-radius: 20px; padding: 14px 18px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 14px; align-items: center; box-shadow: 0 5px 0 rgba(31,74,62,.12); }
@@ -85,7 +123,7 @@ main { flex: 1; min-height: 0; padding-block: clamp(12px, 2vh, 28px); padding-le
 .bitem[aria-pressed="true"]::after { content: "✓"; position: absolute; top: 12px; right: 12px; width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--red); color: #fff; display: grid; place-items: center; font-weight: 900; }
 .bitem:disabled { opacity: .45; }
 .qed .img img { max-width: 160px; object-fit: cover; }
-@media (orientation: portrait), (max-width: 800px) { .setup, .room { grid-template-columns: 1fr; } .qed .opts { grid-template-columns: 1fr; } }
+@media (orientation: portrait), (max-width: 800px) { .live { grid-template-columns: 1fr; } .lpic { flex: none; height: 30vh; } .modes { grid-template-columns: 1fr; } .setup, .room { grid-template-columns: 1fr; } .qed .opts { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -107,6 +145,8 @@ const KEY = "siraya-quiz-host";
 // 整個電視端狀態都存在這台電腦，重新整理或關掉再開都能接續
 const S = Object.assign({
   room: rid(6), roster: [], questions: [], feedback: true,
+  mode: "live",            // live：老師在大螢幕一題一題帶；self：學生自己依序作答
+  live: { idx: 0, reveal: false }, revealed: {},
   phase: "setup",          // setup → lobby → open → closed
   claims: {},              // 姓名 → 手機裝置代碼
   answers: {},             // 姓名 → { 題目代碼: 選項 }
@@ -140,7 +180,15 @@ const rosterFor = device => S.roster.map(name => ({ name, taken: !!S.claims[name
 function send(c, m) { try { c.open && c.send(m); } catch (e) {} }
 function broadcast(make) { for (const [d, c] of conns) send(c, make(d)); }
 function nameOf(device) { return Object.keys(S.claims).find(n => S.claims[n] === device) || null; }
+// 老師帶題：手機只拿到目前這一題，公布後才知道答案
+function liveFor(name) {
+  const q = S.questions[S.live.idx];
+  if (!q || (S.phase !== "open" && S.phase !== "closed")) return null;
+  const mine = (S.answers[name] || {})[q.id];
+  return { idx: S.live.idx, total: S.questions.length, q: { id: q.id, text: q.text, img: q.img || "", opts: q.opts }, reveal: S.live.reveal, ans: S.live.reveal ? q.ans : null, mine: mine ?? null };
+}
 function joinedMsg(name) {
+  if (S.mode === "live") return { t: "joined", name, phase: S.phase, mode: "live", live: liveFor(name) };
   return { t: "joined", name, phase: S.phase, feedback: S.feedback, questions: S.phase === "open" || S.phase === "closed" ? publicQs() : null,
     answered: Object.fromEntries(Object.entries(S.answers[name] || {}).map(([qid, ch]) => [qid, { choice: ch, correct: S.feedback ? isRight(qid, ch) : null }])) };
 }
@@ -167,15 +215,28 @@ function onMessage(c, m) {
     if (S.phase !== "open") return send(c, { t: "phase", phase: S.phase });
     const q = S.questions.find(x => x.id === m.qid); const ch = +m.choice;
     if (!q || !(ch >= 0 && ch < q.opts.length)) return;
+    if (S.mode === "live") {
+      // 只收目前這一題，而且還沒公布答案
+      const mine = S.answers[name] || (S.answers[name] = {});
+      if (q === S.questions[S.live.idx] && !S.live.reveal && !(q.id in mine)) { mine[q.id] = ch; save(); render(); }
+      return send(c, joinedMsg(name));
+    }
     const mine = S.answers[name] || (S.answers[name] = {});
     if (!(q.id in mine)) { mine[q.id] = ch; save(); render(); }   // 回答過就不能再改
     send(c, { t: "answered", qid: q.id, choice: mine[q.id], correct: S.feedback ? isRight(q.id, mine[q.id]) : null });
   }
 }
-function setPhase(p) {
-  S.phase = p; save();
-  broadcast(d => { const n = nameOf(d); return n ? joinedMsg(n) : { t: "roster", roster: rosterFor(d), phase: p }; });
-  render();
+function pushAll() { broadcast(d => { const n = nameOf(d); return n ? joinedMsg(n) : { t: "roster", roster: rosterFor(d), phase: S.phase }; }); }
+function setPhase(p) { S.phase = p; save(); pushAll(); render(); }
+function liveGo(i) {
+  const idx = Math.max(0, Math.min(S.questions.length - 1, i)), q = S.questions[idx];
+  S.live = { idx, reveal: !!(q && S.revealed[q.id]) }; save(); pushAll(); render();
+}
+function liveReveal(on) {
+  const q = S.questions[S.live.idx]; if (!q) return;
+  S.live.reveal = on; if (on) S.revealed[q.id] = true; else delete S.revealed[q.id];
+  save(); pushAll(); render();
+  if (on) speak(`答案是 ${"ABCD"[q.ans]}，${q.opts[q.ans]}`);
 }
 
 // ---------- 遊戲題庫（資料來自遊戲本身，見 bank-data.js） ----------
@@ -236,7 +297,7 @@ function openBank() {
 }
 
 // ---------- 畫面 ----------
-function render() { ({ setup: viewSetup, room: viewRoom, scores: viewScores, rates: viewRates })[S.view](); }
+function render() { ({ setup: viewSetup, room: viewRoom, scores: viewScores, rates: viewRates, live: viewLive })[S.view](); }
 function go(v) { S.view = v; save(); render(); }
 const playUrl = () => { const u = new URL("play.html", location.href); u.search = "r=" + S.room + (passThrough() ? "&" + passThrough() : ""); return u.href; };
 const scoreOf = n => Object.entries(S.answers[n] || {}).filter(([q, c]) => isRight(q, c)).length;
@@ -254,9 +315,18 @@ function viewSetup() {
   left.append(ta);
   const right = el("div", "card");
   right.append(el("h2", "", "題目"));
-  const fb = el("label", "check", `<input type="checkbox" id="fb" ${S.feedback ? "checked" : ""}> 學生作答後馬上看到對或錯`);
-  fb.querySelector("input").onchange = e => { S.feedback = e.target.checked; save(); };
-  right.append(fb);
+  const modes = el("div", "modes");
+  for (const [k, t, d] of [["live", "老師帶題", "大螢幕一題一題出題，學生作答後老師按「公布答案」，大家一起看對錯"], ["self", "學生自己作答", "學生在手機上依序作完全部題目，最後再看分數"]]) {
+    const b = el("button", "mode", `<b>${t}</b><span>${d}</span>`); b.setAttribute("aria-pressed", S.mode === k);
+    b.onclick = () => { if (S.phase === "open") return; S.mode = k; save(); render(); };
+    modes.append(b);
+  }
+  right.append(modes);
+  if (S.mode === "self") {
+    const fb = el("label", "check", `<input type="checkbox" id="fb" ${S.feedback ? "checked" : ""}> 學生作答後馬上看到對或錯`);
+    fb.querySelector("input").onchange = e => { S.feedback = e.target.checked; save(); };
+    right.append(fb);
+  }
   const list = el("div", "qlist");
   S.questions.forEach((q, i) => list.append(qEditor(q, i)));
   right.append(list);
@@ -328,12 +398,16 @@ function shrink(file) {
 function viewRoom() {
   main.innerHTML = "";
   const v = el("div", "view");
-  const phaseText = { lobby: "請學生掃 QR code，點自己的名字", open: "作答中", closed: "作答已結束" }[S.phase] || "";
+  const phaseText = S.mode === "live" && S.phase !== "lobby" ? "還沒加入的同學請掃 QR code" : ({ lobby: "請學生掃 QR code，點自己的名字", open: "作答中", closed: "作答已結束" }[S.phase] || "");
   const top = el("div", "bar", `<div class="phase grow">${phaseText}</div>`);
   const btn = (t, fn, cls = "btn") => { const b = el("button", cls, t); b.onclick = fn; top.append(b); return b; };
-  if (S.phase === "lobby") btn("開始作答", () => setPhase("open"));
-  if (S.phase === "open") btn("結束作答", () => setPhase("closed"), "btn alt");
-  if (S.phase === "closed") btn("重新開放作答", () => setPhase("open"), "btn ghost");
+  if (S.mode === "live") {
+    if (S.phase === "lobby") btn("開始出題", () => { S.live = { idx: 0, reveal: !!S.revealed[S.questions[0]?.id] }; setPhase("open"); go("live"); });
+    else btn("回到題目", () => { if (S.phase === "closed") setPhase("open"); go("live"); });
+  }
+  if (S.mode === "self" && S.phase === "lobby") btn("開始作答", () => setPhase("open"));
+  if (S.mode === "self" && S.phase === "open") btn("結束作答", () => setPhase("closed"), "btn alt");
+  if (S.mode === "self" && S.phase === "closed") btn("重新開放作答", () => setPhase("open"), "btn ghost");
   btn("顯示分數", () => go("scores"), S.phase === "closed" ? "btn" : "btn ghost");
   btn("名單與題目", () => go("setup"), "btn ghost");
   v.append(top);
@@ -365,6 +439,72 @@ function viewRoom() {
   right.append(ppl); r.append(right); v.append(r);
   main.append(v);
 }
+function viewLive() {
+  const q = S.questions[S.live.idx];
+  if (!q) return go("room");
+  main.innerHTML = "";
+  const v = el("div", "view");
+  const rv = S.live.reveal, N = S.questions.length;
+  const who = S.roster.filter(n => S.claims[n] || (S.answers[n] && q.id in S.answers[n]));
+  const got = S.roster.filter(n => S.answers[n] && q.id in S.answers[n]);
+  // 上方：題號列
+  const top = el("div", "bar");
+  const nums = el("div", "nums grow");
+  S.questions.forEach((x, i) => {
+    const b = el("button", "num" + (i === S.live.idx ? " cur" : "") + (S.revealed[x.id] ? " done" : ""), i + 1);
+    b.onclick = () => liveGo(i); nums.append(b);
+  });
+  top.append(nums);
+  const tb = (t, fn, cls = "btn ghost") => { const b = el("button", cls, t); b.onclick = fn; top.append(b); return b; };
+  tb("QR code", () => go("room"));
+  tb("分數", () => go("scores"));
+  v.append(top);
+  // 中間：題目＋選項｜學生
+  const body = el("div", "live");
+  const left = el("div", "lq");
+  if (q.img) left.append(el("div", "fitbox lpic", `<div class="fitted"><img src="${esc(q.img)}" alt=""></div>`));
+  const qt = el("div", "ltext", `<button class="say" aria-label="唸題目">▶</button><span><b>${S.live.idx + 1}.</b> ${esc(q.text)}</span>`);
+  qt.querySelector(".say").onclick = () => speak(q.text + "。" + q.opts.map((o, i) => "ABCD"[i] + "，" + o).join("。"));
+  left.append(qt);
+  const opts = el("div", "lopts");
+  q.opts.forEach((o, i) => {
+    const n = got.filter(s => S.answers[s][q.id] === i).length;
+    const pct = got.length ? n / got.length * 100 : 0;
+    const row = el("div", "lopt" + (rv && i === q.ans ? " right" : "") + (rv && i !== q.ans ? " wrong" : ""),
+      `<span class="k">${"ABCD"[i]}</span><span class="t">${esc(o)}</span>${rv ? `<span class="n">${n} 人</span><span class="fill" style="width:${pct}%"></span>` : ""}`);
+    opts.append(row);
+  });
+  left.append(opts);
+  if (q.img) { const im = left.querySelector(".lpic img"); const f = left.querySelector(".lpic .fitted"); f.style.setProperty("--r", "4 / 3"); const set = () => im.naturalWidth && f.style.setProperty("--r", `${im.naturalWidth} / ${im.naturalHeight}`); im.complete ? set() : im.onload = set; }
+  const right = el("div", "card lppl");
+  const okN = got.filter(s => S.answers[s][q.id] === q.ans).length;
+  right.append(el("div", "bar", rv
+    ? `<h2 class="grow">誰答對了？</h2><span class="status ok">答對 ${okN}</span><span class="status bad">答錯 ${got.length - okN}</span>`
+    : `<h2 class="grow">作答情形</h2><span class="status">已作答 ${got.length} / ${who.length || S.roster.length}</span>`));
+  const ppl = el("div", "people");
+  for (const n of S.roster) {
+    const a = S.answers[n] && q.id in S.answers[n] ? S.answers[n][q.id] : null;
+    const joined = !!S.claims[n] || a !== null;
+    let cls = "", st = joined ? "還沒作答" : "沒有加入";
+    if (a !== null) { if (rv) { cls = a === q.ans ? "done" : "bad"; st = `${a === q.ans ? "✓ 答對" : "✗ 答錯"}（選 ${"ABCD"[a]}）`; } else { cls = "in"; st = "已作答"; } }
+    else if (rv && joined) st = "沒有作答";
+    ppl.append(el("div", "person " + cls, `<span class="nm">${esc(n)}</span><span class="st">${st}</span>`));
+  }
+  right.append(ppl);
+  body.append(left, right); v.append(body);
+  // 下方：操作
+  const bot = el("div", "bar lctrl");
+  const bb = (t, fn, cls = "btn ghost", dis = false) => { const b = el("button", cls, t); b.onclick = fn; b.disabled = dis; bot.append(b); return b; };
+  bb("上一題", () => liveGo(S.live.idx - 1), "btn ghost", S.live.idx === 0);
+  bot.append(el("span", "grow"));
+  if (!rv) bb("公布答案", () => liveReveal(true), "btn");
+  else bb("收回答案", () => liveReveal(false), "btn ghost");
+  bot.append(el("span", "grow"));
+  if (S.live.idx < N - 1) bb("下一題", () => liveGo(S.live.idx + 1), rv ? "btn alt" : "btn ghost");
+  else bb("看總分", () => { setPhase("closed"); go("scores"); }, rv ? "btn alt" : "btn ghost");
+  v.append(bot);
+  main.append(v);
+}
 function viewScores() {
   main.innerHTML = "";
   const v = el("div", "view");
@@ -373,10 +513,11 @@ function viewScores() {
   let byRank = S.sortRank !== false;
   btn(byRank ? "依名單順序" : "依分數排序", () => { S.sortRank = !byRank; save(); render(); });
   btn("每題答對率", () => go("rates"));
+  if (S.mode === "live" && S.phase !== "lobby") btn("回到題目", () => go("live"));
   btn("回教室", () => go("room"));
   const reset = btn("全部重新開始", () => {
     if (!reset.dataset.sure) { reset.dataset.sure = 1; reset.textContent = "確定清除所有答案？"; return; }
-    S.answers = {}; S.claims = {}; S.phase = "lobby"; save(); setPhase("lobby"); go("room");
+    S.answers = {}; S.claims = {}; S.revealed = {}; S.live = { idx: 0, reveal: false }; S.phase = "lobby"; save(); setPhase("lobby"); go("room");
   });
   v.append(top);
   const all = S.questions.length;
